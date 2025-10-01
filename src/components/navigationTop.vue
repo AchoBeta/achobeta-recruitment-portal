@@ -1,8 +1,9 @@
 <script lang="ts" setup>
-import { ref , onMounted , onBeforeUnmount} from 'vue'
+import { ref , onMounted , onBeforeUnmount, computed} from 'vue'
 import { PropTypes } from '@/utils/type/propTypes'
 import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
+import { useStore } from '@/store/index'
 
 defineOptions({
   name:'navigationTop'
@@ -15,6 +16,8 @@ const props = defineProps({
 
 const router=useRouter()
 const dropDom=ref()
+const storage = useStore()
+const isLogin = computed(()=>!!storage.token)
 
 const openDropDown=()=>{
   const containerStyle=dropDom.value.style
@@ -37,7 +40,16 @@ const toAnother=((path:number)=>{
     case 1:router.push('/');break;
     case 2:message.warning('暂未完成，敬请期待~');break;
     case 3:message.warning('暂未完成，敬请期待~');break;
-    case 4:router.push('/login');break;
+    // 登录/退出登录
+    case 4:
+      if(isLogin.value){
+        storage.clearToken()
+        message.success('已退出登录')
+        router.push('/login')
+      }else{
+        router.push('/login')
+      }
+      break;
   }
 })
 
@@ -82,7 +94,7 @@ onBeforeUnmount(()=>{
         <p class="dropDown-content" @click="toAnother(1)">关于我们</p>
         <p class="dropDown-content" @click="toAnother(2)">我的面试</p>
         <p class="dropDown-content" @click="toAnother(3)">个人信息</p>
-        <p class="dropDown-content" @click="toAnother(4)">登录</p>
+        <p class="dropDown-content" @click="toAnother(4)">{{ isLogin ? '退出登录' : '登录' }}</p>
       </div>
   </div>
 </template>
