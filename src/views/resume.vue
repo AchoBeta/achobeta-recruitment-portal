@@ -18,7 +18,7 @@ import { useIdStore } from "@/store/idStore";
 
 // AutoForm imports
 import { AutoForm } from "@/components/ui/auto-form";
-import { resumeFormSchema, type ResumeFormData } from "@/utils/schemas/resumeSchema";
+import { resumeFormSchema, type ResumeFormData, genderOptions } from "@/utils/schemas/resumeSchema";
 
 // shadcn-vue imports
 import { Button } from "@/components/ui/button";
@@ -111,7 +111,7 @@ const autoFormData = computed({
     return {
       name: dto.name || '',
       studentId: dto.studentId || '',
-      gender: dto.gender === 0 ? '0' : dto.gender === 1 ? '1' : undefined,
+      gender: dto.gender === 0 ? '男' : dto.gender === 1 ? '女' : undefined,
       grade: dto.grade || 2024,
       major: dto.major || '',
       className: dto.className || '',
@@ -128,7 +128,7 @@ const autoFormData = computed({
     const dto = form.value.stuSimpleResumeDTO;
     if (value.name !== undefined) dto.name = value.name;
     if (value.studentId !== undefined) dto.studentId = value.studentId;
-    if (value.gender !== undefined) dto.gender = parseInt(value.gender);
+    if (value.gender !== undefined) dto.gender = value.gender === '男' ? 0 : 1;
     if (value.grade !== undefined) dto.grade = value.grade;
     if (value.major !== undefined) dto.major = value.major;
     if (value.className !== undefined) dto.className = value.className;
@@ -154,7 +154,7 @@ const fieldConfig = {
   studentId: {
     label: '学号',
     inputProps: {
-      placeholder: '11~13位学号',
+      placeholder: '20开头的11~13位学号',
       class: 'w-full'
     }
   },
@@ -162,7 +162,7 @@ const fieldConfig = {
     label: '性别',
     component: 'radio' as const,
     inputProps: {
-      class: 'flex gap-4'
+      class: 'flex flex-row gap-6'
     }
   },
   grade: {
@@ -189,7 +189,6 @@ const fieldConfig = {
   },
   email: {
     label: '邮箱',
-    component: 'string' as const,
     inputProps: {
       type: 'email',
       placeholder: '请填写常用邮箱',
@@ -204,7 +203,7 @@ const fieldConfig = {
     }
   },
   introduce: {
-    label: '简介',
+    label: '个人简介',
     component: 'textarea' as const,
     inputProps: {
       placeholder: '请填写个人简介',
@@ -212,7 +211,7 @@ const fieldConfig = {
     }
   },
   experience: {
-    label: '经历',
+    label: '个人经历',
     component: 'textarea' as const,
     inputProps: {
       placeholder: '请填写个人经历',
@@ -228,7 +227,7 @@ const fieldConfig = {
     }
   },
   reason: {
-    label: '加入理由',
+    label: '加入AB的理由',
     component: 'textarea' as const,
     inputProps: {
       placeholder: '请填写加入理由',
@@ -1024,6 +1023,9 @@ const triggerFileInput = () => {
 // AutoForm引用
 const autoFormRef = ref();
 
+// 文件输入引用
+const fileInputRef = ref<HTMLInputElement>();
+
 // 添加拖拽上传处理方法
 const handleFileDrop = (event: DragEvent) => {
   const files = event.dataTransfer?.files;
@@ -1060,7 +1062,7 @@ const handleFormSubmit = (data: ResumeFormData) => {
   const dto = form.value.stuSimpleResumeDTO;
   dto.name = data.name;
   dto.studentId = data.studentId;
-  dto.gender = parseInt(data.gender);
+  dto.gender = data.gender === '男' ? 0 : 1;
   dto.grade = data.grade;
   dto.major = data.major;
   dto.className = data.className;
@@ -1071,7 +1073,7 @@ const handleFormSubmit = (data: ResumeFormData) => {
   dto.experience = data.experience;
   dto.awards = data.awards;
   dto.remark = data.remark || '';
-  
+
   // 调用原有的提交逻辑
   submit();
 };
@@ -1107,34 +1109,47 @@ onBeforeUnmount(() => {
     </h1>
     <Button variant="outline" @click="toProcess" class="Resumeprocess">简历进度</Button>
 
-    <form id="form" class="space-y-6 p-6">
-      <titleBlock title="个人信息【必填】" class="title"></titleBlock>
+    <!-- 表单容器 - 添加最大宽度和居中 -->
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <form id="form" class="space-y-6 p-6">
+        <titleBlock title="个人信息【必填】" class="title"></titleBlock>
 
-      <!-- 证件照上传 -->
-      <div class="form-item">
-        <Label class="text-base font-medium">证件照 *</Label>
-        <div class="content">
-          <input type="file" id="upload" @change="beforeUploadPicture" accept="image/png,image/jpeg,image/jpg" />
-          <div class="view">
-            <div id="imgContainer">
-              <img id="img" />
-              <div id="img-mask">
-                <span id="delImg" @click="delImage">×</span>
+        <!-- 证件照上传 - 改进样式 -->
+        <Card class="w-full">
+          <CardContent class="p-6">
+            <Label class="text-base font-medium mb-4 block">证件照 *</Label>
+            <div class="flex flex-col items-center space-y-4">
+              <div class="relative">
+                <input 
+                  ref="fileInputRef"
+                  type="file" 
+                  id="upload" 
+                  @change="beforeUploadPicture" 
+                  accept="image/png,image/jpeg,image/jpg" 
+                  class="hidden"
+                />
+                <div class="w-32 h-40 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors"
+                     @click="() => fileInputRef?.click()">
+                  <div id="imgContainer" class="w-full h-full relative hidden">
+                    <img id="img" class="w-full h-full object-cover rounded-lg" />
+                    <div id="img-mask" class="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                      <span id="delImg" @click.stop="delImage" class="text-white text-2xl cursor-pointer hover:text-red-400">×</span>
+                    </div>
+                  </div>
+                  <span id="icon" class="text-4xl text-gray-400">+</span>
+                </div>
               </div>
+              <p class="text-sm text-muted-foreground text-center">
+                点击上传证件照<br>
+                支持 PNG、JPG、JPEG 格式
+              </p>
             </div>
-            <span id="icon">+</span>
-          </div>
-        </div>
-      </div>
+          </CardContent>
+        </Card>
 
-      <!-- AutoForm 表单 -->
-      <AutoForm 
-        ref="autoFormRef"
-        :schema="resumeFormSchema" 
-        :field-config="fieldConfig"
-        class="space-y-4"
-        @submit="handleFormSubmit"
-      />
+        <!-- AutoForm 表单 -->
+        <AutoForm ref="autoFormRef" :schema="resumeFormSchema" :field-config="fieldConfig" class="space-y-4"
+          @submit="handleFormSubmit" />
 
       <div class="space"></div>
       <titleBlock title="附件上传【选填】" class="title"></titleBlock>
@@ -1197,21 +1212,18 @@ onBeforeUnmount(() => {
 
       <!-- 按钮组 -->
       <div class="flex justify-center gap-4 pt-6">
-        <Button 
-          @click="submitWithValidation" 
-          :disabled="!isFormValid" 
-          class="px-8"
-          :class="{ 'opacity-50 cursor-not-allowed': !isFormValid }"
-        >
+        <Button @click="submitWithValidation" :disabled="!isFormValid" class="px-8"
+          :class="{ 'opacity-50 cursor-not-allowed': !isFormValid }">
           提交简历
         </Button>
         <Button variant="outline" @click="toActivities" class="px-8">跳转活动</Button>
       </div>
 
-      <p class="last-p text-center">
-        目前还剩下<span class="important-span">{{ count }}</span>次可提交简历
-      </p>
-    </form>
+        <p class="last-p text-center">
+          目前还剩下<span class="important-span">{{ count }}</span>次可提交简历
+        </p>
+      </form>
+    </div>
 
     <!-- Loading Modal -->
     <Dialog :open="showModal">
