@@ -3,7 +3,7 @@ import { useStore } from '@/store/index'
 
 
 const request = axios.create({
-  baseURL:'/',
+  baseURL:import.meta.env.VITE_API_BASE_URL || '/',
   timeout:20*1000
 })
 

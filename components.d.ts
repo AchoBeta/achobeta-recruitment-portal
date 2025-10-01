@@ -7,7 +7,14 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    ActivitiesCard: typeof import('./src/components/activitiesCard.vue')['default']
+    ErrPage: typeof import('./src/components/errPage.vue')['default']
+    InterviewArrangement: typeof import('./src/components/interviewArrangement.vue')['default']
+    InterviewResult: typeof import('./src/components/interviewResult.vue')['default']
+    Introduce: typeof import('./src/components/Introduce.vue')['default']
     NAvatar: typeof import('naive-ui')['NAvatar']
+    NavigationBottom: typeof import('./src/components/navigationBottom.vue')['default']
+    NavigationTop: typeof import('./src/components/navigationTop.vue')['default']
     NBackTop: typeof import('naive-ui')['NBackTop']
     NButton: typeof import('naive-ui')['NButton']
     NCard: typeof import('naive-ui')['NCard']
@@ -33,9 +40,12 @@ declare module 'vue' {
     NText: typeof import('naive-ui')['NText']
     NTimeline: typeof import('naive-ui')['NTimeline']
     NTimelineItem: typeof import('naive-ui')['NTimelineItem']
+    NullPage: typeof import('./src/components/nullPage.vue')['default']
     NUpload: typeof import('naive-ui')['NUpload']
     NUploadDragger: typeof import('naive-ui')['NUploadDragger']
+    ProcessIntroduce: typeof import('./src/components/processIntroduce.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    TitleBlock: typeof import('./src/components/titleBlock.vue')['default']
   }
 }
