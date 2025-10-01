@@ -16,15 +16,13 @@ import {
   deleteResource,
 } from "@/api/api";
 import { useStore } from "@/store/index";
-import { useMessage, useDialog } from "naive-ui";
+import { toast } from "vue-sonner";
 import { deCode } from "@/utils/URIProtect";
 import { useIdStore } from "@/store/idStore";
 
 const pageHeight = ref(document.documentElement.scrollHeight);
 const idStore = useIdStore();
 const storage = useStore();
-const message = useMessage();
-const dialog = useDialog();
 const title = ref<string>("");
 const batchId = ref<string>("");
 const count = ref<number>(3);
@@ -114,7 +112,7 @@ const judgDelete = async function () {
         if (res.data.code === 200) {
           //还要删附件列表
           console.log("成功删除"); //找被删去的资源码在表单数据中的下表
-          message.success("成功删除某个文件");
+          toast.success("成功删除某个文件");
           const index = ((code: number) => {
             for (let i = 0; i < form.value.stuAttachmentDTOList.length; i++) {
               if (form.value.stuAttachmentDTOList[i].attachment === code) {
@@ -128,7 +126,7 @@ const judgDelete = async function () {
           })(item.attachment);
           console.log(index);
         } else {
-          message.warning(res.data.message);
+          toast.warning(res.data.message);
           showModal.value = false;
           console.log("动画关闭");
         }
@@ -147,7 +145,7 @@ const uploadP = async function () {
         form.value.stuSimpleResumeDTO.image = res.data.data; //赋值
         console.log("第一次上传资源成功");
       } else {
-        message.warning(res.data.message);
+        toast.warning(res.data.message);
         showModal.value = false;
         console.log("动画关闭");
       }
@@ -166,7 +164,7 @@ const deleteP = async function (code: number) {
       if (res.data.code === 200) {
         console.log("删除老资源成功");
       } else {
-        message.warning(res.data.message);
+        toast.warning(res.data.message);
         showModal.value = false;
         console.log("动画关闭");
       }
@@ -180,7 +178,7 @@ const deleteP = async function (code: number) {
 
 //上传新增附件资源
 const uploadNewList = async function () {
-  message.warning("进到上传资源函数咯");
+  toast.warning("进到上传资源函数咯");
   if (fileArr.length != 0) {
     //如果有新附件列表  （如何避免重复上传）
     //开始资源上传,先是附件列表
@@ -190,7 +188,7 @@ const uploadNewList = async function () {
       .then((res) => {
         if (res.data.code === 200) {
           form.value.stuAttachmentDTOList = []; //将表单数据重置，之后操作统一赋值
-          message.success("返回资源码数组" + res.data.data.length);
+          toast.success("返回资源码数组" + res.data.data.length);
           //赋值构造 ，将新的附件列表资源码返回到对象数组
           for (let i = 0; i < res.data.data.length; i++) {
             fileListCode.push({
@@ -208,10 +206,10 @@ const uploadNewList = async function () {
           });
           console.log(form.value.stuAttachmentDTOList);
           console.log(fileListCode);
-          message.success("成功上传某个附件");
+          toast.success("成功上传某个附件");
         } else {
-          message.warning(res.data.message);
-          message.warning("上传失败");
+          toast.warning(res.data.message);
+          toast.warning("上传失败");
           showModal.value = false;
           console.log("动画关闭");
         }
@@ -220,11 +218,11 @@ const uploadNewList = async function () {
         console.log(err);
         showModal.value = false;
         console.log("动画关闭");
-        message.warning("上传失败");
-        message.warning(err.message);
+        toast.warning("上传失败");
+        toast.warning(err.message);
       });
   } else {
-    message.error("资源数组为空");
+    toast.error("资源数组为空");
   }
 };
 
@@ -234,7 +232,7 @@ const submit = async () => {
     form.value.stuSimpleResumeDTO.name.trim() === ""
   ) {
     //姓名
-    message.error("请输入姓名");
+    toast.error("请输入姓名");
     return;
   }
   if (
@@ -243,12 +241,12 @@ const submit = async () => {
     isValidStudentId(form.value.stuSimpleResumeDTO.studentId)
   ) {
     //学号
-    message.error("请输入20开头的11~13位的学号!");
+    toast.error("请输入20开头的11~13位的学号!");
     return;
   }
   if (form.value.stuSimpleResumeDTO.gender == null) {
     //性别
-    message.error("请选择性别");
+    toast.error("请选择性别");
     return;
   }
   if (
@@ -256,7 +254,7 @@ const submit = async () => {
     isValidGrade(form.value.stuSimpleResumeDTO.grade)
   ) {
     //年级
-    message.error("请输入20xx格式年级!");
+    toast.error("请输入20xx格式年级!");
     return;
   }
   if (
@@ -264,14 +262,14 @@ const submit = async () => {
     form.value.stuSimpleResumeDTO.major.trim() === ""
   ) {
     //专业
-    message.error("请输入专业");
+    toast.error("请输入专业");
     return;
   }
   if (
     form.value.stuSimpleResumeDTO.className == null ||
     form.value.stuSimpleResumeDTO.studentId.trim() === ""
   ) {
-    message.error("班级");
+    toast.error("班级");
     return;
   }
   if (
@@ -279,7 +277,7 @@ const submit = async () => {
     form.value.stuSimpleResumeDTO.email.trim() === "" ||
     isValidEmail(form.value.stuSimpleResumeDTO.email)
   ) {
-    message.error("邮箱输入有误!");
+    toast.error("邮箱输入有误!");
     return;
   }
   if (
@@ -287,39 +285,39 @@ const submit = async () => {
     form.value.stuSimpleResumeDTO.phoneNumber.trim() === "" ||
     isValidPhone(form.value.stuSimpleResumeDTO.phoneNumber)
   ) {
-    message.error("请输入11位手机号!");
+    toast.error("请输入11位手机号!");
     return;
   }
   if (
     form.value.stuSimpleResumeDTO.reason == null ||
     form.value.stuSimpleResumeDTO.reason.trim() === ""
   ) {
-    message.error("请输入加入AB的理由");
+    toast.error("请输入加入AB的理由");
     return;
   }
   if (
     form.value.stuSimpleResumeDTO.introduce == null ||
     form.value.stuSimpleResumeDTO.introduce.trim() === ""
   ) {
-    message.error("请输入简历");
+    toast.error("请输入简历");
     return;
   }
   if (
     form.value.stuSimpleResumeDTO.experience == null ||
     form.value.stuSimpleResumeDTO.experience.trim() === ""
   ) {
-    message.error("请输入经历");
+    toast.error("请输入经历");
     return;
   }
   // if(form.value.stuSimpleResumeDTO.image==null || form.value.stuSimpleResumeDTO.image.trim()===''){
-  //   message.error('请上传证件照')
+  //   toast.error('请上传证件照')
   //   return
   // }
   if (
     form.value.stuSimpleResumeDTO.awards == null ||
     form.value.stuSimpleResumeDTO.awards.trim() === ""
   ) {
-    message.error("请完善获奖经历");
+    toast.error("请完善获奖经历");
     return;
   }
 
@@ -333,7 +331,7 @@ const submit = async () => {
     picture === null
   ) {
     //返回值即没有图片，也没上传过图片
-    message.error("请上传证件照!");
+    toast.error("请上传证件照!");
     showModal.value = false;
     return;
   } else if (form.value.stuSimpleResumeDTO.image === null && picture != null) {
@@ -348,12 +346,12 @@ const submit = async () => {
       .then((res) => {
         console.log(res);
         if (res.data.code === 200) {
-          message.success("提交成功");
+          toast.success("提交成功");
           if (count.value) count.value--;
           showModal.value = false;
           router.go(0);
         } else {
-          message.warning(res.data.message);
+          toast.warning(res.data.message);
           showModal.value = false;
           console.log("动画关闭");
         }
@@ -373,7 +371,7 @@ const submit = async () => {
 
     //   }
     //   else{
-    //     message.warning(res.data.message)
+    //     toast.warning(res.data.message)
     //     showModal.value = false
     //   }
     // }).catch(err=>{
@@ -391,12 +389,12 @@ const submit = async () => {
       .then((res) => {
         console.log(res);
         if (res.data.code === 200) {
-          message.success("提交成功");
+          toast.success("提交成功");
           if (count.value) count.value--;
           showModal.value = false;
           router.go(0);
         } else {
-          message.warning(res.data.message);
+          toast.warning(res.data.message);
           showModal.value = false;
           console.log("动画关闭");
         }
@@ -411,7 +409,7 @@ const submit = async () => {
     //     console.log('删除老资源成功');
     //   }
     //   else{
-    //     message.warning(res.data.message)
+    //     toast.warning(res.data.message)
     //     showModal.value = false
     //   }
     // }).catch(err=>{
@@ -427,7 +425,7 @@ const submit = async () => {
     //     console.log('新证件照上传成功');
     //   }
     //   else{
-    //     message.warning(res.data.message)
+    //     toast.warning(res.data.message)
     //     showModal.value = false
     //   }
     // }).catch(err=>{
@@ -441,12 +439,12 @@ const submit = async () => {
       .then((res) => {
         console.log(res);
         if (res.data.code === 200) {
-          message.success("提交成功");
+          toast.success("提交成功");
           if (count.value) count.value--;
           showModal.value = false;
           router.go(0);
         } else {
-          message.warning(res.data.message);
+          toast.warning(res.data.message);
           showModal.value = false;
           console.log("动画关闭");
         }
@@ -478,7 +476,7 @@ const submit = async () => {
   //       console.log(fileListCode);
   //     }
   //     else{
-  //       message.warning(res.data.message)
+  //       toast.warning(res.data.message)
   //       showModal.value = false
   //     }
 
@@ -504,12 +502,12 @@ const submit = async () => {
   //   // submitResume(storage.token,form.value).then(res=>{
   //   //   console.log(res);
   //   //   if(res.data.code===200){
-  //   //     message.success('提交成功')
+  //   //     toast.success('提交成功')
   //   //     if(count.value)
   //   //       count.value--;
   //   //   }
   //   //   else{
-  //   //     message.warning(res.data.message)
+  //   //     toast.warning(res.data.message)
   //   //     showModal.value = false
   //   //   }
   //   // }).catch(err=>{
@@ -535,7 +533,7 @@ onMounted(() => {
     //如果地址栏不为空
     batchId.value = idStore.getBatchId() as string;
   else {
-    message.error("请先选择你的招新批次!!!");
+    toast.error("请先选择你的招新批次!!!");
   }
   form.value.stuSimpleResumeDTO.batchId = parseInt(batchId.value as string); //将上个页面选择的id，送到当前页面作为不可更改批次使用
   title.value = deCode(params.title as string);
@@ -584,7 +582,7 @@ onMounted(() => {
         compareList = res.data.data.stuAttachmentVOList;
         pictureCode = res.data.data.stuSimpleResumeVO.image;
 
-        dialog.success({
+        toast.success({
           title: "您已填写简历",
           content: "是否直接查看该批次活下的活动?",
           positiveText: "是",
@@ -592,7 +590,7 @@ onMounted(() => {
           onPositiveClick: () => {
             toActivities();
           },
-          onNegativeClick: () => {},
+          onNegativeClick: () => { },
         });
 
         //如果有图片资源码
@@ -660,7 +658,7 @@ onMounted(() => {
         }
       } else {
         //没填写过简历时
-        message.warning("请先填写简历");
+        toast.warning("请先填写简历");
         if (idStore.getEmail() != null) {
           //如果有邮箱
           form.value.stuSimpleResumeDTO.email = idStore.getEmail();
@@ -838,16 +836,8 @@ onBeforeUnmount(() => {
     <n-h1 class="header-description">
       {{ title }}
     </n-h1>
-    <n-button type="info" @click="toProcess" class="Resumeprocess"
-      >简历进度</n-button
-    >
-    <n-form
-      :model="form"
-      label-align="left"
-      label-placement="top"
-      label-width="10vw"
-      id="form"
-    >
+    <n-button type="info" @click="toProcess" class="Resumeprocess">简历进度</n-button>
+    <n-form :model="form" label-align="left" label-placement="top" label-width="10vw" id="form">
       <titleBlock title="个人信息【必填】" class="title"></titleBlock>
       <n-form-item label="证件照" class="label-width" required>
         <!-- <n-upload
@@ -876,123 +866,58 @@ onBeforeUnmount(() => {
         </div>
       </n-form-item>
       <n-form-item label="姓名" class="label-width" required>
-        <n-input
-          v-model:value="form.stuSimpleResumeDTO.name"
-          class="width"
-          placeholder="请填写姓名"
-        />
+        <n-input v-model:value="form.stuSimpleResumeDTO.name" class="width" placeholder="请填写姓名" />
       </n-form-item>
       <n-form-item label="学号" class="label-width" required>
-        <n-input
-          v-model:value="form.stuSimpleResumeDTO.studentId"
-          class="width"
-          placeholder="11~13位学号"
-        />
+        <n-input v-model:value="form.stuSimpleResumeDTO.studentId" class="width" placeholder="11~13位学号" />
       </n-form-item>
       <n-form-item label="性别" class="label-width" required>
-        <n-radio-group
-          v-model:value="form.stuSimpleResumeDTO.gender"
-          name="radiogroup"
-        >
+        <n-radio-group v-model:value="form.stuSimpleResumeDTO.gender" name="radiogroup">
           <n-space>
-            <n-radio
-              v-for="item in gender"
-              :key="item.value"
-              :value="item.value"
-            >
+            <n-radio v-for="item in gender" :key="item.value" :value="item.value">
               {{ item.label }}
             </n-radio>
           </n-space>
         </n-radio-group>
       </n-form-item>
       <n-form-item label="年级" class="label-width" required>
-        <n-input
-          v-model:value="form.stuSimpleResumeDTO.grade"
-          class="width"
-          :input-props="{ type: 'number' }"
-          placeholder="20xx格式填写"
-        />
+        <n-input v-model:value="form.stuSimpleResumeDTO.grade" class="width" :input-props="{ type: 'number' }"
+          placeholder="20xx格式填写" />
       </n-form-item>
       <n-form-item label="专业 ( 乱填后果自负!! )" class="label-width" required>
-        <n-input
-          v-model:value="form.stuSimpleResumeDTO.major"
-          class="width"
-          placeholder="请填写专业"
-        />
+        <n-input v-model:value="form.stuSimpleResumeDTO.major" class="width" placeholder="请填写专业" />
       </n-form-item>
       <n-form-item label="班级 ( 乱填后果自负!! )" class="label-width" required>
-        <n-input
-          v-model:value="form.stuSimpleResumeDTO.className"
-          class="width"
-          placeholder="请以班级+班号格式填写"
-        />
+        <n-input v-model:value="form.stuSimpleResumeDTO.className" class="width" placeholder="请以班级+班号格式填写" />
       </n-form-item>
       <n-form-item label="邮箱" class="label-width" required>
-        <n-input
-          v-model:value="form.stuSimpleResumeDTO.email"
-          class="width"
-          placeholder="请填写常用邮箱"
-        />
+        <n-input v-model:value="form.stuSimpleResumeDTO.email" class="width" placeholder="请填写常用邮箱" />
       </n-form-item>
       <n-form-item label="手机号" class="label-width" required>
-        <n-input
-          v-model:value="form.stuSimpleResumeDTO.phoneNumber"
-          class="width"
-          placeholder="请填写常用手机号"
-        />
+        <n-input v-model:value="form.stuSimpleResumeDTO.phoneNumber" class="width" placeholder="请填写常用手机号" />
       </n-form-item>
       <n-form-item label="简介" class="label-width" required>
-        <n-input
-          v-model:value="form.stuSimpleResumeDTO.introduce"
-          type="textarea"
-          class="width"
-          placeholder="请填写个人简介"
-        />
+        <n-input v-model:value="form.stuSimpleResumeDTO.introduce" type="textarea" class="width"
+          placeholder="请填写个人简介" />
       </n-form-item>
       <n-form-item label="经历" class="label-width" required>
-        <n-input
-          v-model:value="form.stuSimpleResumeDTO.experience"
-          type="textarea"
-          class="width"
-          placeholder="请填写个人经历"
-        />
+        <n-input v-model:value="form.stuSimpleResumeDTO.experience" type="textarea" class="width"
+          placeholder="请填写个人经历" />
       </n-form-item>
       <n-form-item label="获奖经历" class="label-width" required>
-        <n-input
-          v-model:value="form.stuSimpleResumeDTO.awards"
-          type="textarea"
-          class="width"
-          placeholder="请填写获奖经历"
-        />
+        <n-input v-model:value="form.stuSimpleResumeDTO.awards" type="textarea" class="width" placeholder="请填写获奖经历" />
       </n-form-item>
       <n-form-item label="加入理由" class="label-width" required>
-        <n-input
-          v-model:value="form.stuSimpleResumeDTO.reason"
-          type="textarea"
-          class="width"
-          placeholder="请填写加入理由"
-        />
+        <n-input v-model:value="form.stuSimpleResumeDTO.reason" type="textarea" class="width" placeholder="请填写加入理由" />
       </n-form-item>
       <n-form-item label="备注" class="label-width">
-        <n-input
-          v-model:value="form.stuSimpleResumeDTO.remark"
-          class="width"
-          placeholder="可选填备注"
-        />
+        <n-input v-model:value="form.stuSimpleResumeDTO.remark" class="width" placeholder="可选填备注" />
       </n-form-item>
       <div class="space"></div>
       <titleBlock title="附件上传【选填】" class="title"></titleBlock>
       <n-form-item label="附件" class="label-width" required>
-        <n-upload
-          :multiple="true"
-          directory-dnd
-          :default-file-list="fileList"
-          default-uoload="false"
-          :max="5"
-          class="width"
-          @before-upload="beforeUploadList"
-          @remove="removeUploadList"
-        >
+        <n-upload :multiple="true" directory-dnd :default-file-list="fileList" default-uoload="false" :max="5"
+          class="width" @before-upload="beforeUploadList" @remove="removeUploadList">
           <n-upload-dragger>
             <div style="margin-bottom: 12px">
               <n-icon size="48" :depth="2">
@@ -1005,13 +930,10 @@ onBeforeUnmount(() => {
       </n-form-item>
       <n-flex justify="space-around" class="flex-button">
         <n-button type="success" @click="submit">提交简历</n-button>
-        <n-button type="warning" secondary @click="toActivities"
-          >跳转活动</n-button
-        >
+        <n-button type="warning" secondary @click="toActivities">跳转活动</n-button>
       </n-flex>
       <p class="last-p">
-        目前还剩下<span class="important-span">{{ count }}</span
-        >次可提交简历
+        目前还剩下<span class="important-span">{{ count }}</span>次可提交简历
       </p>
     </n-form>
     <n-modal :show="showModal">
@@ -1030,28 +952,34 @@ onBeforeUnmount(() => {
   background-color: #ffffff;
   box-sizing: content-box;
 }
+
 .top {
   z-index: 999;
   position: sticky;
   top: 0;
 }
+
 .header-description {
   margin: calc(var(--vh, 1vh) * 1) 0 0 2vw;
   font-size: 1.7rem;
 }
+
 .content {
   position: relative;
   width: 30vw;
   height: 30vw;
   background-color: #f3f4f6;
 }
+
 .content input {
   position: absolute;
-  opacity: 0; /*隐藏掉 */
+  opacity: 0;
+  /*隐藏掉 */
   width: 100%;
   height: 100%;
   cursor: pointer;
 }
+
 .view {
   width: 100%;
   height: 100%;
@@ -1059,10 +987,12 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
 }
+
 #icon {
   display: inline-block;
   font-size: 40px;
 }
+
 #imgContainer {
   position: absolute;
   width: 100%;
@@ -1103,6 +1033,7 @@ onBeforeUnmount(() => {
   width: 90vw;
   height: auto !important;
 }
+
 .width {
   width: 85vw;
   min-height: calc(var(--vh, 1vh) * 7);
@@ -1111,31 +1042,38 @@ onBeforeUnmount(() => {
   border-radius: 3%;
   background-color: #f3f4f6;
 }
+
 .space {
   background-color: rgba(255, 255, 255, 0.756);
   height: calc(var(--vh, 1vh) * 1);
   margin: 0 0 2vh 0;
 }
+
 .flex-button {
   width: 90vw;
   padding: 0 0 calc(var(--vh, 1vh) * 1) 0;
   margin: 0 6vw 0 auto;
 }
+
 .last-button {
   width: 40vw;
   margin: calc(var(--vh, 1vh) * 1) 0 calc(var(--vh, 1vh) * 2) 27vw;
 }
+
 .last-p {
   text-align: center;
   padding: calc(var(--vh, 1vh) * 1) 0 calc(var(--vh, 1vh) * 2) 0;
 }
+
 .important-span {
   font-weight: bolder;
   color: rgb(227, 60, 60);
 }
+
 .title {
   margin: calc(var(--vh, 1vh) * 3) 0 calc(var(--vh, 1vh) * 2) 4vw;
 }
+
 .Resumeprocess {
   margin: calc(var(--vh, 1vh) * 1) 0 0 2vw;
 }
@@ -1150,14 +1088,17 @@ onBeforeUnmount(() => {
   top: calc(50% - 20px);
   left: calc(50% - 20px);
 }
+
 @keyframes loader {
   0% {
     left: -100px;
   }
+
   100% {
     left: 110%;
   }
 }
+
 #box {
   width: 50px;
   height: 50px;
@@ -1168,24 +1109,30 @@ onBeforeUnmount(() => {
   left: 0;
   border-radius: 3px;
 }
+
 @keyframes animate {
   17% {
     border-bottom-right-radius: 3px;
   }
+
   25% {
     transform: translateY(9px) rotate(22.5deg);
   }
+
   50% {
     transform: translateY(18px) scale(1, 0.9) rotate(45deg);
     border-bottom-right-radius: 40px;
   }
+
   75% {
     transform: translateY(9px) rotate(67.5deg);
   }
+
   100% {
     transform: translateY(0) rotate(90deg);
   }
 }
+
 #shadow {
   width: 50px;
   height: 5px;
@@ -1197,6 +1144,7 @@ onBeforeUnmount(() => {
   border-radius: 50%;
   animation: shadow 0.5s linear infinite;
 }
+
 @keyframes shadow {
   50% {
     transform: scale(1.2, 1);
@@ -1207,6 +1155,7 @@ body {
   background: #6997db;
   overflow: hidden;
 }
+
 h4 {
   position: absolute;
   bottom: 20px;

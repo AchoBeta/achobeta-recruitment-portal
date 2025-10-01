@@ -2,14 +2,12 @@
 import { ref, onMounted, onBeforeUnmount, computed } from "vue";
 import { PropTypes } from "@/utils/type/propTypes";
 import { useRouter } from "vue-router";
-import { useMessage } from "naive-ui";
+import { toast } from "vue-sonner";
 import { useStore } from "@/store/index";
 
 defineOptions({
   name: "navigationTop",
 });
-
-const message = useMessage();
 const props = defineProps({
   pageHeight: PropTypes.number.def(642),
 });
@@ -40,16 +38,16 @@ const toAnother = (path: number) => {
       router.push("/");
       break;
     case 2:
-      message.warning("暂未完成，敬请期待~");
+      toast.warning("暂未完成，敬请期待~");
       break;
     case 3:
-      message.warning("暂未完成，敬请期待~");
+      toast.warning("暂未完成，敬请期待~");
       break;
     // 登录/退出登录
     case 4:
       if (isLogin.value) {
         storage.clearToken();
-        message.success("已退出登录");
+        toast.success("已退出登录");
         router.push("/login");
       } else {
         router.push("/login");
@@ -76,7 +74,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="navigationTop">
-    <n-flex class="flex-layout" justify="space-between" :wrap="false">
+    <div class="flex-layout flex justify-between flex-nowrap">
       <div class="avatar-left">
         <img src="/src/assets/achoBeta.png" class="avatar-logo" />
         <p>AchoBeta</p>
@@ -86,7 +84,7 @@ onBeforeUnmount(() => {
         class="avatar-right"
         @click="openDropDown"
       />
-    </n-flex>
+    </div>
     <div class="dropDown" ref="dropDom">
       <p class="dropDown-content" @click="toAnother(1)">关于我们</p>
       <p class="dropDown-content" @click="toAnother(2)">我的面试</p>

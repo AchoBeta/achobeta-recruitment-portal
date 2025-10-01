@@ -3,7 +3,7 @@ import { ref, onMounted } from "vue";
 import titleBlock from "@/components/titleBlock.vue";
 import { useStore } from "@/store/index";
 import { useIdStore } from "@/store/idStore";
-import { useMessage } from "naive-ui";
+import { toast } from "vue-sonner";
 import { getInterviewDetail } from "@/api/api";
 import { interviewArrangement } from "@/utils/type/interviewArrangementType.ts";
 import { splitTime } from "@/utils/splitTime";
@@ -15,7 +15,6 @@ defineOptions({
 const interviewId = ref<string>("");
 const storage = useStore();
 const idStore = useIdStore();
-const message = useMessage();
 const arrangement = ref<interviewArrangement>({
   time: "",
   address: "",
@@ -25,7 +24,7 @@ const arrangement = ref<interviewArrangement>({
 onMounted(() => {
   if (idStore.getInterviewId() === null) {
     //如果没有选择idStore，或者sessionStorage没有存储
-    message.warning("请先选择您要查看的面试!!");
+    toast.warning("请先选择您要查看的面试!!");
   } else {
     interviewId.value = idStore.getInterviewId() as string;
   }
@@ -40,7 +39,7 @@ onMounted(() => {
         arrangement.value.address = res.data.data.address;
         arrangement.value.description = res.data.data.description;
       } else {
-        message.warning(res.data.message);
+        toast.warning(res.data.message);
       }
     })
     .catch((err) => {

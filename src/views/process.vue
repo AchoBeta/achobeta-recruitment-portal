@@ -9,7 +9,7 @@ import {
 import { getStatusList, getEventList, getResumeStatus } from "@/api/api";
 import { useStore } from "@/store/index";
 import { useIdStore } from "@/store/idStore.ts";
-import { useMessage } from "naive-ui";
+import { toast } from "vue-sonner";
 import navigationTop from "@/components/navigationTop.vue";
 
 const statuslist = ref<statusList[]>([]); //对应码号，说明简历的状态（待筛之类？其实我认为两者概念似乎倒转了）
@@ -26,7 +26,6 @@ const eventColor = [
 ]; //为事件状态创建对应颜色表，每个下标的事件代表的不同的颜色（目前有4大类颜色）
 const storage = useStore();
 const idStore = useIdStore();
-const message = useMessage();
 
 onMounted(async () => {
   let batchId: string = "";
@@ -34,7 +33,7 @@ onMounted(async () => {
     //如果地址栏不为空
     batchId = idStore.getBatchId() as string;
   } else {
-    message.error("请先选择你的招新批次!!!");
+    toast.error("请先选择你的招新批次!!!");
   }
 
   await getStatusList(storage.token).then((res) => {
@@ -47,7 +46,7 @@ onMounted(async () => {
         });
       });
     } else {
-      message.warning(res.data.message);
+      toast.warning(res.data.message);
     }
   });
 
@@ -62,7 +61,7 @@ onMounted(async () => {
         });
       });
     } else {
-      message.warning(res.data.message);
+      toast.warning(res.data.message);
     }
   });
 
@@ -78,7 +77,7 @@ onMounted(async () => {
         });
       });
     } else {
-      message.warning(res.data.message);
+      toast.warning(res.data.message);
     }
   });
 });

@@ -16,6 +16,11 @@ declare module 'vue' {
     CardFooter: typeof import('./src/components/ui/card/CardFooter.vue')['default']
     CardHeader: typeof import('./src/components/ui/card/CardHeader.vue')['default']
     CardTitle: typeof import('./src/components/ui/card/CardTitle.vue')['default']
+    Carousel: typeof import('./src/components/ui/carousel/Carousel.vue')['default']
+    CarouselContent: typeof import('./src/components/ui/carousel/CarouselContent.vue')['default']
+    CarouselItem: typeof import('./src/components/ui/carousel/CarouselItem.vue')['default']
+    CarouselNext: typeof import('./src/components/ui/carousel/CarouselNext.vue')['default']
+    CarouselPrevious: typeof import('./src/components/ui/carousel/CarouselPrevious.vue')['default']
     ErrPage: typeof import('./src/components/errPage.vue')['default']
     Input: typeof import('./src/components/ui/input/Input.vue')['default']
     InterviewArrangement: typeof import('./src/components/interviewArrangement.vue')['default']
@@ -55,6 +60,7 @@ declare module 'vue' {
     ProcessIntroduce: typeof import('./src/components/processIntroduce.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    Sonner: typeof import('./src/components/ui/sonner/Sonner.vue')['default']
     TitleBlock: typeof import('./src/components/titleBlock.vue')['default']
   }
 }

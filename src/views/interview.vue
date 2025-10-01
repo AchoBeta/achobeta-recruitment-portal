@@ -7,14 +7,13 @@ import { interviewType } from "@/utils/type/interviewType.ts";
 import { useStore } from "@/store/index";
 import { useIdStore } from "@/store/idStore";
 import { getInterview } from "@/api/api";
-import { useMessage } from "naive-ui";
+import { toast } from "vue-sonner";
 
 const storage = useStore();
 const idStore = useIdStore();
 const router = useRouter();
 const batchId = ref<number>();
 const actId = ref<number>();
-const message = useMessage();
 const interviewList = ref<interviewType[]>([]);
 
 const toInterviewDetailed = (id: number) => {
@@ -26,13 +25,13 @@ onMounted(() => {
   if (idStore.getBatchId() != null) {
     batchId.value = parseInt(idStore.getBatchId() as string);
   } else {
-    message.warning("请回到首页选择批次!");
+    toast.warning("请回到首页选择批次!");
   }
 
   if (idStore.getActId() != null) {
     actId.value = parseInt(idStore.getActId() as string);
   } else {
-    message.warning("请回到活动选择页面选择活动!");
+    toast.warning("请回到活动选择页面选择活动!");
   }
   //如果都有，则进行调用接口
   getInterview(storage.token, {

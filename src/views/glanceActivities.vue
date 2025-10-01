@@ -9,7 +9,7 @@ import { useIdStore } from "@/store/idStore";
 import { cardType } from "@/utils/type/cardType";
 import { Activity } from "@/utils/type/activity.ts";
 import { getActivitiesList } from "@/api/api";
-import { useMessage } from "naive-ui";
+import { toast } from "vue-sonner";
 
 type activitycard = {
   id: number;
@@ -17,7 +17,6 @@ type activitycard = {
 };
 
 const is = ref<boolean>();
-const message = useMessage();
 const storage = useStore();
 const idStore = useIdStore();
 const router = useRouter();
@@ -46,7 +45,7 @@ onMounted(() => {
   if (idStore.getBatchId() != null)
     //检查地址栏是否为空
     batchId.value = idStore.getBatchId() as string;
-  else message.warning("请先选择你的批次");
+  else toast.warning("请先选择你的批次");
 
   getActivitiesList(batchId.value, token)
     .then((res) => {

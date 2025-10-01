@@ -5,7 +5,7 @@ import titleBlock from "@/components/titleBlock.vue";
 import Hourglass from "@vicons/ionicons5/Hourglass";
 import { useStore } from "@/store/index";
 import { useIdStore } from "@/store/idStore";
-import { useMessage } from "naive-ui";
+import { toast } from "vue-sonner";
 import { getInterviewComment } from "@/api/api";
 import nullPage from "@/components/nullPage.vue";
 
@@ -18,7 +18,6 @@ const isDescription = ref<string>();
 const interviewId = ref<string>("");
 const storage = useStore();
 const idStore = useIdStore();
-const message = useMessage();
 const comments = ref<commentType>({
   id: 1,
   interviewId: 1,
@@ -36,7 +35,7 @@ const comments = ref<commentType>({
 onMounted(() => {
   if (idStore.getInterviewId() === null) {
     //如果没有选择idStore，或者sessionStorage没有存储
-    message.warning("请先选择您要查看的面试!!");
+    toast.warning("请先选择您要查看的面试!!");
   } else {
     interviewId.value = idStore.getInterviewId() as string;
   }

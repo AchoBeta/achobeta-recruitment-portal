@@ -4,7 +4,7 @@ import { ref, onMounted, onBeforeUnmount } from "vue";
 import { useIdStore } from "@/store/idStore";
 import { useStore } from "@/store/index";
 import { getTemplate, getQuestion, submitQuestion } from "@/api/api.ts";
-import { useMessage } from "naive-ui";
+import { toast } from "vue-sonner";
 import { timePeriod } from "@/utils/type/timePeriod.ts";
 import { questionReceive } from "@/utils/type/questionReceive.ts"; //问题、答案、问题id统合对象类型
 import { questionForm } from "@/utils/type/questionFormType.ts"; //提交活动表单类型
@@ -17,7 +17,6 @@ const is = ref<boolean>();
 const isDescription = ref<string>("");
 const idStore = useIdStore();
 const storage = useStore();
-const message = useMessage();
 const actId = ref<string>("");
 const timeList = ref<timePeriod[]>([]);
 
@@ -61,9 +60,9 @@ const submit = () => {
     .then((res) => {
       console.log(res);
       if (res.data.code === 200) {
-        message.success("提交成功");
+        toast.success("提交成功");
       } else {
-        message.warning(res.data.message);
+        toast.warning(res.data.message);
       }
     })
     .catch((err) => {
@@ -75,7 +74,7 @@ onMounted(() => {
   if (idStore.getActId() != null) {
     actId.value = idStore.getActId() as string;
   } else {
-    message.warning("请先选择活动!!");
+    toast.warning("请先选择活动!!");
   }
   //先调用获取草稿函数
   getQuestion(actId.value, storage.token)

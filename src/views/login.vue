@@ -6,12 +6,11 @@ import { emailLogin, sendCaptcha } from "@/api/api";
 import { emailLoginType } from "@/utils/type/emailLoginType";
 import { useStore } from "@/store/index";
 import { useIdStore } from "@/store/idStore";
-import { useMessage } from "naive-ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { computed } from "vue";
+import { toast } from "vue-sonner";
 
-const message = useMessage();
 const pageHeight = ref(document.documentElement.scrollHeight);
 const router = useRouter();
 const storage = useStore();
@@ -58,22 +57,22 @@ const sendCode = () => {
         .then((res) => {
           console.log(res.data.code);
           if (res.data.code == 200) {
-            message.success("成功发送验证码！");
+            toast.success("成功发送验证码！");
             countDown();
             isDisabled.value = true;
           } else {
-            message.warning(res.data.message);
+            toast.warning(res.data.message);
           }
         })
         .catch((err) => {
           console.log(err);
-          message.error(err.message);
+          toast.error(err.message);
         });
     } else {
-      message.error("您输入的邮箱格式不对");
+      toast.error("您输入的邮箱格式不对");
     }
   } else {
-    message.error("请填写邮箱!!");
+    toast.error("请填写邮箱!!");
   }
 };
 
@@ -103,15 +102,15 @@ const login = () => {
         idStore.setEmail(emailForm.value.email_params.email as string);
         router.push("/");
       } else if (res.data.code == 2500) {
-        message.error("输入验证码错误");
-        message.warning(res.data.message);
+        toast.error("输入验证码错误");
+        toast.warning(res.data.message);
       } else {
-        message.warning(res.data.message);
+        toast.warning(res.data.message);
       }
     })
     .catch((err) => {
       console.log(err);
-      message.error(err.message);
+      toast.error(err.message);
     });
 };
 

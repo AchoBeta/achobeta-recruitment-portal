@@ -26,6 +26,11 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import("@/views/login.vue"),
   },
   {
+    path: "/errPage",
+    name: "errPage",
+    component: () => import("@/components/errPage.vue"),
+  },
+  {
     path: "/glanceActivities",
     name: "glanceActivities",
     component: () => import("@/views/glanceActivities.vue"),

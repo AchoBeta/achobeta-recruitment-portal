@@ -8,10 +8,9 @@ import titleBlock from "@/components/titleBlock.vue";
 // import { deCode } from '@/utils/URIProtect'
 import { useStore } from "@/store/index";
 import { useIdStore } from "@/store/idStore";
-import { useMessage } from "naive-ui";
+import { toast } from "vue-sonner";
 import { getTemplate } from "@/api/api";
 
-const message = useMessage();
 const storage = useStore();
 const idStore = useIdStore();
 const actId = ref<string>("");
@@ -40,7 +39,7 @@ onMounted(() => {
   if (idStore.getActId() != null) {
     //如果为空，可能性1：路由跳转的原因，2：直接访问
     actId.value = idStore.getActId() as string;
-  } else message.warning("请先选择你的招新活动!!");
+  } else toast.warning("请先选择你的招新活动!!");
   getTemplate(actId.value, storage.token)
     .then((res) => {
       console.log(res);
