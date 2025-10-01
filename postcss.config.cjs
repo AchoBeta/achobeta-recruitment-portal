@@ -1,8 +1,9 @@
 // postcss.config.js
 module.exports = {
-  plugins: {
-    'postcss-px-to-viewport': {
+  plugins: [
+    require("@tailwindcss/postcss"),
+    require("postcss-px-to-viewport")({
       viewportWidth: 375,
-    },
-  },
+    }),
+  ],
 };

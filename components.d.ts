@@ -8,7 +8,16 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     ActivitiesCard: typeof import('./src/components/activitiesCard.vue')['default']
+    Button: typeof import('./src/components/ui/button/Button.vue')['default']
+    Card: typeof import('./src/components/ui/card/Card.vue')['default']
+    CardAction: typeof import('./src/components/ui/card/CardAction.vue')['default']
+    CardContent: typeof import('./src/components/ui/card/CardContent.vue')['default']
+    CardDescription: typeof import('./src/components/ui/card/CardDescription.vue')['default']
+    CardFooter: typeof import('./src/components/ui/card/CardFooter.vue')['default']
+    CardHeader: typeof import('./src/components/ui/card/CardHeader.vue')['default']
+    CardTitle: typeof import('./src/components/ui/card/CardTitle.vue')['default']
     ErrPage: typeof import('./src/components/errPage.vue')['default']
+    Input: typeof import('./src/components/ui/input/Input.vue')['default']
     InterviewArrangement: typeof import('./src/components/interviewArrangement.vue')['default']
     InterviewResult: typeof import('./src/components/interviewResult.vue')['default']
     Introduce: typeof import('./src/components/Introduce.vue')['default']
