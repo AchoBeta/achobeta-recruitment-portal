@@ -1,29 +1,27 @@
-import {defineStore} from 'pinia'
-import { ref } from 'vue'
+import { defineStore } from "pinia";
+import { ref } from "vue";
 
-export const useStore =defineStore(
-  'store',
-  ()=>{
-    const token = ref<string>('')
+export const useStore = defineStore(
+  "store",
+  () => {
+    const token = ref<string>("");
 
-    function setToken(newToken:string){
-      token.value=newToken
+    function setToken(newToken: string) {
+      token.value = newToken;
     }
 
-    function clearToken(){
-      token.value=''
-      localStorage.removeItem('store')
+    function clearToken() {
+      token.value = "";
+      localStorage.removeItem("store");
     }
 
-    
-
-    return{
+    return {
       token,
       setToken,
-      clearToken
-    }
+      clearToken,
+    };
   },
   {
-    persist:true
-  }
-)
+    persist: true,
+  },
+);

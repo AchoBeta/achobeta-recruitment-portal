@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import Person32Filled from '@vicons/fluent/Person32Filled'
-import NewspaperSharp from '@vicons/ionicons5/NewspaperSharp'
-import Grunt from '@vicons/fa/Grunt'
-import { useRouter,useRoute } from 'vue-router'
-import { ref,onMounted } from 'vue'
+import Person32Filled from "@vicons/fluent/Person32Filled";
+import NewspaperSharp from "@vicons/ionicons5/NewspaperSharp";
+import Grunt from "@vicons/fa/Grunt";
+import { useRouter, useRoute } from "vue-router";
+import { ref, onMounted } from "vue";
 
 defineOptions({
-  name:'navigationBottom'
-})
+  name: "navigationBottom",
+});
 
-const isCheck=ref(0)     //为真则悬浮——被选中，为假——不被选中，传入参数决定哪个图标亮起
-const router=useRouter()
-const route=useRoute()
+const isCheck = ref(0); //为真则悬浮——被选中，为假——不被选中，传入参数决定哪个图标亮起
+const router = useRouter();
+const route = useRoute();
 
 // const toResume=()=>{
 //   isCheck.value=!isCheck.value
@@ -23,64 +23,74 @@ const route=useRoute()
 //   router.push('./question')
 // }
 
-const Block=[
+const Block = [
   {
-    value:0,
-    label:'活动'
+    value: 0,
+    label: "活动",
   },
   {
-    value:1,
-    label:'问卷'
+    value: 1,
+    label: "问卷",
   },
   {
-    value:2,
-    label:'面试'
-  }
-]
+    value: 2,
+    label: "面试",
+  },
+];
 
-const getIcon=(index:number)=>{
+const getIcon = (index: number) => {
   switch (index) {
-    case 0:return Person32Filled;
-    case 1:return NewspaperSharp;
-    case 2:return Grunt;
+    case 0:
+      return Person32Filled;
+    case 1:
+      return NewspaperSharp;
+    case 2:
+      return Grunt;
   }
-}
+};
 
-const getClassLayout=(index:number)=>{
-  return isCheck.value===index?'icon-layout-after':'icon-layout'
-}
+const getClassLayout = (index: number) => {
+  return isCheck.value === index ? "icon-layout-after" : "icon-layout";
+};
 
-const getClassIcon=(index:number)=>{
-  return isCheck.value===index?'icon-after':'icon'
-}
+const getClassIcon = (index: number) => {
+  return isCheck.value === index ? "icon-after" : "icon";
+};
 
-const isDesctiption=(index:number)=>{
-  return isCheck.value===index
-}
+const isDesctiption = (index: number) => {
+  return isCheck.value === index;
+};
 
-const toPage=(index:number)=>{
-  isCheck.value=index
-  switch(index){
-    case 0:router.push('/activitiesLayout/activity');break;
-    case 1:router.push('/activitiesLayout/question');break;
-    case 2:router.push('/activitiesLayout/interview');break;
+const toPage = (index: number) => {
+  isCheck.value = index;
+  switch (index) {
+    case 0:
+      router.push("/activitiesLayout/activity");
+      break;
+    case 1:
+      router.push("/activitiesLayout/question");
+      break;
+    case 2:
+      router.push("/activitiesLayout/interview");
+      break;
   }
-}
+};
 
-onMounted(()=>{
-  const url = route.fullPath               //根据路由判断图标
-  if(url ==='/activitiesLayout/activity')
-    isCheck.value = 0
-  else if(url ==='/activitiesLayout/question')
-    isCheck.value = 1
-  else if(url === '/activitiesLayout/interview'|| url === '/activitiesLayout/interviewDetailed')
-    isCheck.value = 2
-})
+onMounted(() => {
+  const url = route.fullPath; //根据路由判断图标
+  if (url === "/activitiesLayout/activity") isCheck.value = 0;
+  else if (url === "/activitiesLayout/question") isCheck.value = 1;
+  else if (
+    url === "/activitiesLayout/interview" ||
+    url === "/activitiesLayout/interviewDetailed"
+  )
+    isCheck.value = 2;
+});
 
 // router.beforeEach((to,from)=>{
 //   console.log(to);
 //   console.log(from);
-  
+
 //   if(to.fullPath ==='/activitiesLayout/activity')
 //     isCheck.value = 0
 //   else if(to.fullPath ==='/activitiesLayout/question')
@@ -92,10 +102,7 @@ onMounted(()=>{
 
 <template>
   <div class="white-circle">
-    <n-flex 
-      class="layout"
-      justify="space-around"
-    >
+    <n-flex class="layout" justify="space-around">
       <!-- <div class="background-image">
         <div class="icon-layout-after">
           <n-icon color="white" @click="toResume">
@@ -112,60 +119,64 @@ onMounted(()=>{
         </div>
         <p v-if="isCheck" class="description">问卷</p>
       </div> -->
-      <div v-for="(item,index) in Block" class="background-image" >
-        <div :class=getClassLayout(index)>
+      <div v-for="(item, index) in Block" class="background-image">
+        <div :class="getClassLayout(index)">
           <n-icon>
-            <component :is="getIcon(index)"  :class=getClassIcon(index) @click="toPage(index)"/>
+            <component
+              :is="getIcon(index)"
+              :class="getClassIcon(index)"
+              @click="toPage(index)"
+            />
           </n-icon>
         </div>
-        <p class="description" v-if="isDesctiption(index)">{{item.label}}</p>
+        <p class="description" v-if="isDesctiption(index)">{{ item.label }}</p>
       </div>
     </n-flex>
   </div>
 </template>
 
 <style scoped>
-.white-circle{
+.white-circle {
   width: 90vw;
-  min-height:10vh;
+  min-height: 10vh;
   background-color: white;
   border-radius: 40px;
 }
-.layout{
+.layout {
   width: 80vw;
   padding: 0vh 0 0 4vw;
 }
-.background-image{
+.background-image {
   min-height: 9vh;
-  padding:1vh 0 0 0;
+  padding: 1vh 0 0 0;
 }
-.icon-layout-after{
+.icon-layout-after {
   width: 10vmin;
   height: 10vmin;
   border-radius: 50%;
-  background-color: rgb(104, 132, 194)
+  background-color: rgb(104, 132, 194);
 }
-.icon-layout{
-  width:10vmin;
+.icon-layout {
+  width: 10vmin;
   height: 10vmin;
 }
-.icon-after{
+.icon-after {
   padding: 0.5vh 0 0 0;
   width: 10vmin;
   height: 8vmin;
   color: white;
 }
-.icon{
+.icon {
   padding: 1vh 0 0 0;
-  width:8vmin;
-  height:10vmin;
+  width: 8vmin;
+  height: 10vmin;
 }
 
-.description{
-  font-family: '楷体';
+.description {
+  font-family: "楷体";
   font-weight: bold;
   font-size: 0.8rem;
   text-align: center;
-  padding:0vh 0 0 0;
+  padding: 0vh 0 0 0;
 }
 </style>

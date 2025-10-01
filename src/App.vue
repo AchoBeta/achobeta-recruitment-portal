@@ -4,12 +4,11 @@
 </script>
 
 <template>
-  <n-message-provider placement="top" :max='3'>
-  <n-dialog-provider>
+  <n-message-provider placement="top" :max="3">
+    <n-dialog-provider>
       <routerView></routerView>
-  </n-dialog-provider>
+    </n-dialog-provider>
   </n-message-provider>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

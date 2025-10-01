@@ -1,30 +1,28 @@
 <script lang="ts" setup>
-import { ref,onMounted } from 'vue'
-import navigationBottom from '@/components/navigationBottom.vue'
-import navigationTop from '@/components/navigationTop.vue'
-import scroollTo from '@/utils/scroollTo'
-import { useRouter } from 'vue-router'
+import { ref, onMounted } from "vue";
+import navigationBottom from "@/components/navigationBottom.vue";
+import navigationTop from "@/components/navigationTop.vue";
+import scroollTo from "@/utils/scroollTo";
+import { useRouter } from "vue-router";
 
-const transitionName = ref()
-const router = useRouter()
+const transitionName = ref();
+const router = useRouter();
 
-router.beforeEach((to,from)=>{
-  console.log('组件下注册的全局守卫');
-  
-  if((to.meta.index as number) > (from.meta.index as number)){
-    transitionName.value = 'slide-right'
-  }
-  else if((to.meta.index as number) < (from.meta.index as number)){
-    transitionName.value = 'slide-left'
-  }
-  else{
-    transitionName.value = ''
-  }
-})
+router.beforeEach((to, from) => {
+  console.log("组件下注册的全局守卫");
 
-onMounted(()=>{
-  scroollTo()
-})
+  if ((to.meta.index as number) > (from.meta.index as number)) {
+    transitionName.value = "slide-right";
+  } else if ((to.meta.index as number) < (from.meta.index as number)) {
+    transitionName.value = "slide-left";
+  } else {
+    transitionName.value = "";
+  }
+});
+
+onMounted(() => {
+  scroollTo();
+});
 </script>
 
 <template>
@@ -32,22 +30,22 @@ onMounted(()=>{
     <navigationTop class="top"></navigationTop>
     <div class="animation">
       <router-view v-slot="{ Component }">
-      <transition  :name=transitionName  >
-        <component :is="Component" />
-      </transition>
-    </router-view>
+        <transition :name="transitionName">
+          <component :is="Component" />
+        </transition>
+      </router-view>
     </div>
-    <navigationBottom class="navigationBottom" ></navigationBottom>
+    <navigationBottom class="navigationBottom"></navigationBottom>
   </div>
 </template>
 
 <style scoped>
-.top{
+.top {
   z-index: 999;
   position: sticky;
   top: 0;
 }
-.activitiesLayout{
+.activitiesLayout {
   width: 100vw;
   min-height: 100vh;
   background-color: #eff7ff;
@@ -56,33 +54,33 @@ onMounted(()=>{
 .slide-right-enter-active,
 .slide-right-leave-active,
 .slide-left-enter-active,
-.slide-left-leave-active{
+.slide-left-leave-active {
   transition: transform 0.3s;
 }
 
 .slide-right-leave-from,
-.slide-right-enter-from{
+.slide-right-enter-from {
   transform: translateX(0);
 }
 .slide-right-leave-to,
-.slide-right-enter-to{
-  transform:translateX(-100%);    /*组件向左移动*/
+.slide-right-enter-to {
+  transform: translateX(-100%); /*组件向左移动*/
 }
 
-.slide-left-enter-from{
-  transform:translateX(-200%);
+.slide-left-enter-from {
+  transform: translateX(-200%);
 }
-.slide-left-enter-to{
+.slide-left-enter-to {
   transform: translateX(-100%);
 }
-.slide-left-leave-from{
+.slide-left-leave-from {
   transform: translateX(0);
 }
-.slide-left-leave-to{
+.slide-left-leave-to {
   transform: translateX(100%);
 }
-.navigationBottom{
-  margin:4vh 0 0 0;
+.navigationBottom {
+  margin: 4vh 0 0 0;
   position: sticky;
   bottom: 3vh;
   left: 5vw;

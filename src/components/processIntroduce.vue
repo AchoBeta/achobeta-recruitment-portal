@@ -1,25 +1,22 @@
 <script lang="ts" setup>
-import ArrowAutofitUp20Filled from '@vicons/fluent/ArrowAutofitUp20Filled'
-import Number1 from '@vicons/carbon/Number1'
-import Number2 from '@vicons/carbon/Number2'
-import Number3 from '@vicons/carbon/Number3'
-import Number4 from '@vicons/carbon/Number4'
-import Number5 from '@vicons/carbon/Number5'
-import Number6 from '@vicons/carbon/Number6'
-import Number7 from '@vicons/carbon/Number7'
-import Number8 from '@vicons/carbon/Number8'
+import ArrowAutofitUp20Filled from "@vicons/fluent/ArrowAutofitUp20Filled";
+import Number1 from "@vicons/carbon/Number1";
+import Number2 from "@vicons/carbon/Number2";
+import Number3 from "@vicons/carbon/Number3";
+import Number4 from "@vicons/carbon/Number4";
+import Number5 from "@vicons/carbon/Number5";
+import Number6 from "@vicons/carbon/Number6";
+import Number7 from "@vicons/carbon/Number7";
+import Number8 from "@vicons/carbon/Number8";
 defineOptions({
-  name:'processIntroduce'
-})
+  name: "processIntroduce",
+});
 </script>
 
 <template>
-  <n-card  
-    content-style="padding:0;"
-    class="box"
-    >
-      <n-timeline :icon-size="30">
-      <n-timeline-item 
+  <n-card content-style="padding:0;" class="box">
+    <n-timeline :icon-size="30">
+      <n-timeline-item
         color="green"
         title="点击对应批次"
         time="2018-04-03 20:46"
@@ -27,7 +24,7 @@ defineOptions({
         class="icon"
       >
         <template #icon>
-          <n-icon >
+          <n-icon>
             <ArrowAutofitUp20Filled />
           </n-icon>
         </template>
@@ -45,12 +42,12 @@ defineOptions({
           </n-icon>
         </template>
       </n-timeline-item>
-      <n-timeline-item 
-      title="等待招新活动"
-      time="2018-04-03 20:46"
-      line-type="dashed"
-      color="blue"
-      class="icon"
+      <n-timeline-item
+        title="等待招新活动"
+        time="2018-04-03 20:46"
+        line-type="dashed"
+        color="blue"
+        class="icon"
       >
         <template #icon>
           <n-icon>
@@ -62,7 +59,7 @@ defineOptions({
         title="查看招新活动信息"
         time="2018-04-03 20:46"
         class="icon"
-        color=#ff7514
+        color="#ff7514"
       >
         <template #icon>
           <n-icon>
@@ -75,7 +72,7 @@ defineOptions({
         title="填写招新活动问卷"
         time="2018-04-03 20:46"
         class="icon"
-        color=#dd6565
+        color="#dd6565"
       >
         <template #icon>
           <n-icon>
@@ -140,16 +137,16 @@ defineOptions({
 </template>
 
 <style scoped>
-.box{
+.box {
   width: 90vw;
   border-width: none;
   border-color: white;
-  box-shadow:0 0 20px #b5b2b2;
-  margin:0 5vw 0 auto;
+  box-shadow: 0 0 20px #b5b2b2;
+  margin: 0 5vw 0 auto;
   padding: 4vh 0 4vh 0;
   border-radius: 20px;
 }
-.icon{
+.icon {
   margin: 0 0 0 2vw;
 }
 </style>

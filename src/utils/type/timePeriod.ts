@@ -1,4 +1,4 @@
-export interface timePeriod{
-  value:number,
-  label:string
+export interface timePeriod {
+  value: number;
+  label: string;
 }
