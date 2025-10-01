@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref, onMounted } from "vue";
 import titleBlock from "@/components/titleBlock.vue";
-import { useStore } from "@/store/index";
+import { useAuthStore } from "@/store/index";
 import { useIdStore } from "@/store/idStore";
 import { toast } from "vue-sonner";
 import { getInterviewDetail } from "@/api/api";
@@ -13,7 +13,7 @@ defineOptions({
 });
 
 const interviewId = ref<string>("");
-const storage = useStore();
+const storage = useAuthStore();
 const idStore = useIdStore();
 const arrangement = ref<interviewArrangement>({
   time: "",

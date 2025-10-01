@@ -11,13 +11,3 @@ const pinia = createPinia();
 pinia.use(piniaPluginPersist);
 
 createApp(App).use(pinia).use(router).mount("#app");
-router.beforeEach((to, from) => {
-  // console.log(to);
-  console.log(from);
-
-  const isLogin: boolean = !!localStorage.store;
-  if (!isLogin && to.path !== "/login") {
-    return "/login";
-  }
-  return true;
-});

@@ -4,12 +4,12 @@ import ShareArrivalTimeSharp from "@vicons/material/ShareArrivalTimeSharp";
 import { useRouter } from "vue-router";
 import { ref, onMounted } from "vue";
 import { interviewType } from "@/utils/type/interviewType.ts";
-import { useStore } from "@/store/index";
+import { useAuthStore } from "@/store/index";
 import { useIdStore } from "@/store/idStore";
 import { getInterview } from "@/api/api";
 import { toast } from "vue-sonner";
 
-const storage = useStore();
+const storage = useAuthStore();
 const idStore = useIdStore();
 const router = useRouter();
 const batchId = ref<number>();

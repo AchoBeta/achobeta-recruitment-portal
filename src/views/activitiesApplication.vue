@@ -6,12 +6,12 @@ import scroollTo from "@/utils/scroollTo";
 import { Activity } from "@/utils/type/activity";
 import titleBlock from "@/components/titleBlock.vue";
 // import { deCode } from '@/utils/URIProtect'
-import { useStore } from "@/store/index";
+import { useAuthStore } from "@/store/index";
 import { useIdStore } from "@/store/idStore";
 import { toast } from "vue-sonner";
 import { getTemplate } from "@/api/api";
 
-const storage = useStore();
+const storage = useAuthStore();
 const idStore = useIdStore();
 const actId = ref<string>("");
 // const params = useRoute().query

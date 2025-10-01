@@ -3,7 +3,7 @@ import { ref, onMounted } from "vue";
 import { commentType } from "@/utils/type/commentType";
 import titleBlock from "@/components/titleBlock.vue";
 import Hourglass from "@vicons/ionicons5/Hourglass";
-import { useStore } from "@/store/index";
+import { useAuthStore } from "@/store/index";
 import { useIdStore } from "@/store/idStore";
 import { toast } from "vue-sonner";
 import { getInterviewComment } from "@/api/api";
@@ -16,7 +16,7 @@ defineOptions({
 const is = ref();
 const isDescription = ref<string>();
 const interviewId = ref<string>("");
-const storage = useStore();
+const storage = useAuthStore();
 const idStore = useIdStore();
 const comments = ref<commentType>({
   id: 1,

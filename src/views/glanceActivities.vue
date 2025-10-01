@@ -1,10 +1,9 @@
 <script lang="ts" setup>
-import navigationTop from "@/components/navigationTop.vue";
 import activitiesCard from "@/components/activitiesCard.vue";
 import errPage from "@/components/errPage.vue";
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { useStore } from "@/store/index";
+import { useAuthStore } from "@/store/index";
 import { useIdStore } from "@/store/idStore";
 import { cardType } from "@/utils/type/cardType";
 import { Activity } from "@/utils/type/activity.ts";
@@ -17,7 +16,7 @@ type activitycard = {
 };
 
 const is = ref<boolean>();
-const storage = useStore();
+const storage = useAuthStore();
 const idStore = useIdStore();
 const router = useRouter();
 const batchId = ref<string>("");
@@ -75,7 +74,6 @@ onMounted(() => {
 </script>
 
 <template>
-  <navigationTop class="top"></navigationTop>
   <n-flex vertical class="flex-layout">
     <activitiesCard
       v-if="!is"
@@ -95,11 +93,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.top {
-  z-index: 999;
-  position: sticky;
-  top: 0;
-}
 .flex-layout {
   min-height: 90vh;
   width: 100vw;

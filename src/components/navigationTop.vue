@@ -1,36 +1,28 @@
-<script lang="ts" setup>
-import { ref, onMounted, onBeforeUnmount, computed } from "vue";
-import { PropTypes } from "@/utils/type/propTypes";
+<script setup lang="ts">
+import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { toast } from "vue-sonner";
-import { useStore } from "@/store/index";
+import { useAuthStore } from "@/store/index";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarRail,
+} from "@/components/ui/sidebar";
 
 defineOptions({
   name: "navigationTop",
 });
-const props = defineProps({
-  pageHeight: PropTypes.number.def(642),
-});
 
 const router = useRouter();
-const dropDom = ref();
-const storage = useStore();
-const isLogin = computed(() => !!storage.token);
-
-const openDropDown = () => {
-  const containerStyle = dropDom.value.style;
-  const childs = document.querySelectorAll(".dropDown-content");
-  let totalHeight = 0;
-  childs.forEach((child) => {
-    const element = child as HTMLElement;
-    totalHeight += parseInt(element.offsetHeight.toString());
-  });
-  if (containerStyle.height == "0px") {
-    containerStyle.height = `${totalHeight}px`;
-  } else {
-    containerStyle.height = "0px";
-  }
-};
+const storage = useAuthStore();
+const isLogin = computed(() => storage.isLoggedIn);
 
 const toAnother = (path: number) => {
   switch (path) {
@@ -56,104 +48,86 @@ const toAnother = (path: number) => {
   }
 };
 
-const watchHeight = () => {
-  // document.body.style.height = `${pageHeight.value}px`           //使文档恢复初试页面高度
-  // (document.getElementById("app") as HTMLElement).style.height = pageHeight.value + "px";
-  const vh = props.pageHeight * 0.01;
-  document.documentElement.style.setProperty("--vh", `${vh}px`);
+// 导航数据
+const navigationData = {
+  navMain: [
+    {
+      title: "主要功能",
+      items: [
+        {
+          title: "关于我们",
+          action: () => toAnother(1),
+          isActive: false,
+        },
+        {
+          title: "我的面试",
+          action: () => toAnother(2),
+          isActive: false,
+        },
+        {
+          title: "个人信息",
+          action: () => toAnother(3),
+          isActive: false,
+        },
+      ],
+    },
+    {
+      title: "账户",
+      items: [
+        {
+          title: isLogin.value ? "退出登录" : "登录",
+          action: () => toAnother(4),
+          isActive: false,
+        },
+      ],
+    },
+  ],
 };
-
-onMounted(() => {
-  window.addEventListener("resize", watchHeight);
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener("resize", watchHeight);
-});
 </script>
 
 <template>
-  <div class="navigationTop">
-    <div class="flex-layout flex justify-between flex-nowrap">
-      <div class="avatar-left">
-        <img src="/src/assets/achoBeta.png" class="avatar-logo" />
-        <p>AchoBeta</p>
+  <Sidebar>
+    <SidebarHeader class="border-b border-gray-100 p-6">
+      <div class="flex items-center gap-3">
+        <img src="/src/assets/achoBeta.png" class="h-10 w-10" alt="AchoBeta Logo" />
+        <div>
+          <h2 class="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            AchoBeta
+          </h2>
+          <p class="text-sm text-gray-500">招新</p>
+        </div>
       </div>
-      <img
-        src="/src/assets/avatar.jpg"
-        class="avatar-right"
-        @click="openDropDown"
-      />
-    </div>
-    <div class="dropDown" ref="dropDom">
-      <p class="dropDown-content" @click="toAnother(1)">关于我们</p>
-      <p class="dropDown-content" @click="toAnother(2)">我的面试</p>
-      <p class="dropDown-content" @click="toAnother(3)">个人信息</p>
-      <p class="dropDown-content" @click="toAnother(4)">
-        {{ isLogin ? "退出登录" : "登录" }}
-      </p>
-    </div>
-  </div>
-</template>
+      <div class="mt-4 flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+        <img src="/src/assets/avatar.jpg" class="h-8 w-8 rounded-full" alt="用户头像" />
+        <div class="flex-1">
+          <p class="text-sm font-medium text-gray-900">
+            {{ isLogin ? "已登录用户" : "未登录" }}
+          </p>
+          <p class="text-xs text-gray-500">
+            {{ isLogin ? "欢迎回来" : "请先登录" }}
+          </p>
+        </div>
+      </div>
+    </SidebarHeader>
 
-<style scoped>
-.navigationTop {
-  height: calc(var(--vh, 1vh) * 7);
-  width: 100vw;
-  background-color: rgb(251, 249, 249);
-}
-.flex-layout {
-  width: 100%;
-  height: calc(var(--vh, 1vh) * 7);
-}
-.avatar-left {
-  width: 60vw;
-  margin: 0 0 0 5vw;
-  height: calc(var(--vh, 1vh) * 7);
-  display: flex;
-  flex-wrap: nowrap;
-  flex-grow: 1;
-  /* flex-direction: column; */
-}
-.avatar-logo {
-  margin: calc(var(--vh, 1vh) * 0.5) 0 auto 0;
-  height: calc(var(--vh, 1vh) * 6);
-}
-.avatar-left p {
-  height: calc(var(--vh, 1vh) * 5vh);
-  padding: calc(var(--vh, 1vh) * 0.2) 0 calc(var(--vh, 1vh) * 1.5) 2vw;
-  background: url("/src/assets/text_background.jpg") no-repeat;
-  background-size: cover;
-  background-clip: text;
-  color: transparent;
-  font-size: 1.9rem;
-  font-family: "微软雅黑";
-  font-style: italic;
-  font-weight: bolder;
-}
-.avatar-right {
-  margin: calc(var(--vh, 1vh) * 0.5) 10vw 0 0;
-  height: calc(var(--vh, 1vh) * 6);
-  width: auto;
-  background-color: inherit;
-  border-radius: 50%;
-}
-.dropDown-content {
-  width: 100vw;
-  background-color: rgb(255, 253, 253);
-  font-size: 1.1rem;
-  font-weight: normal;
-  text-align: center;
-  letter-spacing: 0.7rem;
-  padding: calc(var(--vh, 1vh) * 1) 0;
-  border-bottom: 1px solid rgb(231, 231, 231);
-  font-family: "宋体";
-  animation: dropdown-animation 0.3s forwards;
-  box-sizing: content-box;
-}
-.dropDown {
-  height: 0;
-  overflow: hidden;
-  transition: height 0.5s;
-}
-</style>
+    <SidebarContent>
+      <SidebarGroup v-for="group in navigationData.navMain" :key="group.title">
+        <SidebarGroupLabel class="text-gray-600 font-medium">
+          {{ group.title }}
+        </SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            <SidebarMenuItem v-for="item in group.items" :key="item.title">
+              <SidebarMenuButton @click="item.action" :is-active="item.isActive"
+                class="hover:bg-blue-50 hover:text-blue-700 transition-colors">
+                <span>{{ item.title }}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    </SidebarContent>
+
+    <SidebarRail />
+  </Sidebar>
+</template>

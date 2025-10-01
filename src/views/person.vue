@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { ref } from "vue";
-import navigationTop from "@/components/navigationTop.vue";
 const information = ref({
   username: "黑羽快斗",
   nickname: "你回到",
@@ -10,7 +9,6 @@ const information = ref({
 </script>
 
 <template>
-  <navigationTop class="top"></navigationTop>
   <n-flex vertical class="person-layout">
     <div class="avater-layout">
       <div class="avater-flex">

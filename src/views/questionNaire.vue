@@ -2,7 +2,7 @@
 import type { SelectOption } from "naive-ui";
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import { useIdStore } from "@/store/idStore";
-import { useStore } from "@/store/index";
+import { useAuthStore } from "@/store/index";
 import { getTemplate, getQuestion, submitQuestion } from "@/api/api.ts";
 import { toast } from "vue-sonner";
 import { timePeriod } from "@/utils/type/timePeriod.ts";
@@ -16,7 +16,7 @@ const pageHeight = ref(document.documentElement.scrollHeight);
 const is = ref<boolean>();
 const isDescription = ref<string>("");
 const idStore = useIdStore();
-const storage = useStore();
+const storage = useAuthStore();
 const actId = ref<string>("");
 const timeList = ref<timePeriod[]>([]);
 
@@ -186,33 +186,16 @@ onBeforeUnmount(() => {
     <n-form :model="questionNaire" class="form-layout" v-if="is">
       <titleBlock title="活动问卷" class="title"></titleBlock>
       <div class="questionItem-layout">
-        <n-form-item
-          :label="item.question"
-          class="label-width"
-          v-for="item in questionNaire"
-          :key="item.questionId"
-        >
-          <n-input
-            v-model:value="item.receive"
-            type="textarea"
-            class="width"
-            @change="
-              inputChange(item.receive as string, item.questionId as number)
-            "
-          />
+        <n-form-item :label="item.question" class="label-width" v-for="item in questionNaire" :key="item.questionId">
+          <n-input v-model:value="item.receive" type="textarea" class="width" @change="
+            inputChange(item.receive as string, item.questionId as number)
+            " />
         </n-form-item>
         <n-space vertical>
           <n-form-item label="时间段选择" class="last-label-width">
-            <n-select
-              v-model:value="questionsubmit.periodIds"
-              :options="timeList"
-              max-tag-count="responsive"
-              :multiple="true"
-              @update:value="selectChange"
-              :clearable="true"
-              class="select-width"
-              placeholder="请选择时间段"
-            />
+            <n-select v-model:value="questionsubmit.periodIds" :options="timeList" max-tag-count="responsive"
+              :multiple="true" @update:value="selectChange" :clearable="true" class="select-width"
+              placeholder="请选择时间段" />
           </n-form-item>
         </n-space>
       </div>
@@ -230,9 +213,11 @@ onBeforeUnmount(() => {
   margin: calc(var(--vh, 1vh) * 3) 0 calc(var(--vh, 1vh) * 4) 4vw;
   font-size: 1.5rem;
 }
+
 .header-description {
   margin: calc(var(--vh, 1vh) * 2) 0 0 2vw;
 }
+
 .null {
   padding: calc(var(--vh, 1vh) * 10) 0 0 0;
   box-sizing: border-box;
@@ -240,36 +225,44 @@ onBeforeUnmount(() => {
   text-align: center;
   font-size: 5rem;
 }
+
 .form-layout {
   margin: calc(var(--vh, 1vh) * 2) 0 0 0;
   width: 100vw;
   min-height: calc(var(--vh, 1vh) * 70);
 }
+
 .questionItem-layout {
   min-height: calc(var(--vh, 1vh) * 55);
 }
+
 .label-width {
   width: 90vw;
   margin: 0 auto 0 5vw;
 }
+
 .last-label-width {
   width: 90vw;
   margin: 0 5vw 0 5vw;
 }
+
 .width {
   width: 85vw;
   min-height: calc(var(--vh, 1vh) * 7);
   border-radius: 3%;
   background-color: #ffffff;
 }
+
 .select-width {
   width: 85vw;
   border-radius: 3%;
   background-color: #ffffff;
 }
+
 .last-label-width :deep .n-form-item-feedback-wrapper {
   min-height: calc(var(--vh, 1vh) * 1);
 }
+
 .flex-button {
   width: 90vw;
   margin: 0 6vw 0 auto;

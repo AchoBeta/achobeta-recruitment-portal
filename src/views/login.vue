@@ -1,19 +1,19 @@
-<script lang="ts" setup>
-import { ref, onMounted, onBeforeUnmount } from "vue";
-import navigationTop from "@/components/navigationTop.vue";
+<script setup lang="ts">
+import { ref, onMounted, onBeforeUnmount, computed } from "vue";
 import { useRouter } from "vue-router";
 import { emailLogin, sendCaptcha } from "@/api/api";
 import { emailLoginType } from "@/utils/type/emailLoginType";
-import { useStore } from "@/store/index";
+import { useAuthStore } from "@/store/index";
 import { useIdStore } from "@/store/idStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { computed } from "vue";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "vue-sonner";
 
 const pageHeight = ref(document.documentElement.scrollHeight);
 const router = useRouter();
-const storage = useStore();
+const storage = useAuthStore();
 const idStore = useIdStore();
 const emailForm = ref<emailLoginType>({
   login_type: "email",
@@ -146,166 +146,44 @@ const emailCodeValue = computed<string | number | undefined>({
   },
 });
 </script>
-
 <template>
-  <navigationTop class="top" :pageHeight="pageHeight"></navigationTop>
-  <div class="login-layout">
-    <div class="flex-layout">
-      <p class="login-tag">邮箱登录</p>
-      <div>
-        <p class="form-title">邮箱</p>
-        <Input
-          placeholder="请输入您的邮箱"
-          class="email-input"
-          v-model="emailValue"
-        />
-      </div>
-      <div>
-        <p class="form-title">验证码</p>
-        <div class="captcha-flex flex justify-around items-end">
-          <Input
-            class="captcha"
-            v-model="emailCodeValue"
-            placeholder="请输入验证码"
-          />
-          <p
-            :class="['captcha-tip', { disabled: isDisabled }]"
-            @click="sendCode"
-          >
-            {{ sendCodeText }}
-          </p>
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 p-4">
+    <Card class="mx-auto w-full sm:max-w-sm">
+      <CardHeader>
+        <CardTitle class="text-2xl">
+          登录
+        </CardTitle>
+        <CardDescription>
+          请输入您的邮箱和验证码登录系统
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div class="grid gap-4">
+          <div class="grid gap-2">
+            <Label for="email">邮箱</Label>
+            <Input id="email" v-model="emailValue" type="email" placeholder="请输入邮箱" required />
+          </div>
+          <div class="grid gap-2">
+            <div class="flex items-center">
+              <Label for="code">验证码</Label>
+              <Button @click="sendCode" :disabled="isDisabled" variant="outline" size="sm" class="ml-auto">
+                {{ sendCodeText }}
+              </Button>
+            </div>
+            <Input id="code" v-model="emailCodeValue" placeholder="请输入验证码" required />
+          </div>
+          <div class="text-xs text-gray-500 text-center">
+            无账号将自动注册
+          </div>
+          <Button @click="login" type="submit" class="w-full">
+            登录
+          </Button>
         </div>
-      </div>
-      <Button
-        variant="default"
-        @click="login"
-        class="button w-[90%] h-[calc(var(--vh,1vh)*6)] mx-[5%]"
-        >登录</Button
-      >
-      <!-- <p class="tip">暂时只有网易、QQ的邮箱能使用哦😥</p> -->
-    </div>
+      </CardContent>
+    </Card>
   </div>
 </template>
 
 <style scoped>
-.top {
-  z-index: 999;
-  position: sticky;
-  top: 0;
-}
-
-.login-layout {
-  width: 100vw;
-  height: calc(var(--vh, 1vh) * 6);
-  background-color: rgb(255, 255, 255);
-}
-
-.flex-layout {
-  height: calc(var(--vh, 1vh) * 90);
-  width: 90vw;
-  margin: 0 auto 0 5vw;
-  font-family: "宋体";
-}
-
-.login-tag {
-  margin: calc(var(--vh, 1vh) * 10) 0 0 0;
-  font-weight: bold;
-  font-size: 1.4rem;
-}
-
-.form-title {
-  font-size: 1.1rem;
-  margin: 0 0 0 3vw;
-}
-
-.email-input {
-  border: none;
-  outline: none;
-  width: 80vw;
-  margin: calc(var(--vh, 1vh) * 1) 5vw calc(var(--vh, 1vh) * 2) 5vw;
-  padding: 0 0 calc(var(--vh, 1vh) * 1) 0;
-  background-color: inherit;
-  border-bottom-width: 2px;
-  border-bottom-color: rgb(134, 128, 128);
-  border-bottom-style: solid;
-  font-size: 1rem;
-}
-
-/* .flex-layout :deep .n-input-wrapper{
-  border:none!important;
-  outline: none;
-}
-.flex-layout :deep .n-input__input{
-  border:none!important;
-  outline: none;
-}
-.flex-layout :deep .n-input__input-el{
-  border:none!important;
-  outline: none;
-}
-.flex-layout :deep .n-input{
-  border:none!important;
-  outline: none;
-  background-color: inherit;
-}
-.flex-layout :deep .n-stateful{
-  border-width: 0!important;
-  outline: none;
-  background-color: inherit;
-}
-.flex-layout :deep .n-auto-complete{
-  border:none;
-  outline: none;
-  width: 90%;
-  margin: 1vh 0 2vh 2vw;
-  padding: 0 0 1vh 0;
-  background-color: inherit;
-  border-bottom-width:2px;
-  border-bottom-color: rgb(134, 128, 128);
-  border-bottom-style: solid;
-  font-size: 1rem;
-}
-.flex-layout :deep .n-input--focus{
-  outline: none!important;
-} */
-.captcha-flex {
-  width: 80vw;
-  margin: calc(var(--vh, 1vh) * 1) 5vw calc(var(--vh, 1vh) * 4) 5vw;
-  border-bottom-color: rgb(178, 165, 165);
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-}
-
-.captcha {
-  width: 50vw;
-  border: none;
-  outline: none;
-  background-color: inherit;
-  font-size: 1rem;
-  padding: 0 0 calc(var(--vh, 1vh) * 1) 0;
-  flex-grow: 1;
-}
-
-.captcha-tip {
-  width: 20vw;
-  padding: 0 2vw 0 0;
-}
-
-.button {
-  width: 90%;
-  height: calc(var(--vh, 1vh) * 6);
-  margin: 0 5%;
-}
-
-.tip {
-  margin: calc(var(--vh, 1vh) * 2) 0 0 1vw;
-}
-
-.disabled {
-  width: 30vw;
-  color: gray;
-  pointer-events: none;
-}
-
-/*测试用 */
+/* 使用 shadcn 官方样式，无需自定义CSS */
 </style>

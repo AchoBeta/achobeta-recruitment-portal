@@ -1,18 +1,18 @@
 <script lang="ts" setup>
-import ActivitiesCard from "@/components/activitiesCard.vue";
-import Introduce from "@/components/Introduce.vue";
-import { useRouter } from "vue-router";
+
 import processIntroduce from "@/components/processIntroduce.vue";
-import navigationTop from "@/components/navigationTop.vue";
+import { useRouter } from "vue-router";
 import { ref, onMounted } from "vue";
-import { useStore } from "@/store/index";
+import { useAuthStore } from "@/store/index";
 import { getBatch } from "@/api/api";
 import { cardType } from "@/utils/type/cardType";
-import { batchType } from "@/utils/type/batchType.ts";
+import { batchType } from "@/utils/type/batchType";
 import scroollTo from "@/utils/scroollTo";
-import { enCode } from "@/utils/URIProtect.ts";
-import { useIdStore } from "@/store/idStore.ts";
+import { enCode } from "@/utils/URIProtect";
+import { useIdStore } from "@/store/idStore";
 import { toast } from "vue-sonner";
+import type { CarouselApi } from "@/components/ui/carousel";
+import { watchOnce } from "@vueuse/core";
 import {
   Carousel,
   CarouselContent,
@@ -20,6 +20,8 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 type BatchCardType = {
   id: string;
@@ -27,8 +29,77 @@ type BatchCardType = {
 };
 
 const router = useRouter();
-const storage = useStore();
+const storage = useAuthStore();
 const IdStore = useIdStore();
+
+// 主轮播图缩略图功能
+const emblaMainApi = ref<CarouselApi>();
+const emblaThumbnailApi = ref<CarouselApi>();
+const selectedIndex = ref(0);
+
+function onSelect() {
+  if (!emblaMainApi.value || !emblaThumbnailApi.value)
+    return;
+  selectedIndex.value = emblaMainApi.value.selectedScrollSnap();
+  emblaThumbnailApi.value.scrollTo(emblaMainApi.value.selectedScrollSnap());
+}
+
+function onThumbClick(index: number) {
+  if (!emblaMainApi.value || !emblaThumbnailApi.value)
+    return;
+  emblaMainApi.value.scrollTo(index);
+}
+
+watchOnce(emblaMainApi, (emblaMainApi) => {
+  if (!emblaMainApi)
+    return;
+
+  onSelect();
+  emblaMainApi.on("select", onSelect);
+  emblaMainApi.on("reInit", onSelect);
+});
+
+// 团队轮播图缩略图功能
+const emblaTeamApi = ref<CarouselApi>();
+const emblaTeamThumbnailApi = ref<CarouselApi>();
+const selectedTeamIndex = ref(0);
+
+function onTeamSelect() {
+  if (!emblaTeamApi.value || !emblaTeamThumbnailApi.value)
+    return;
+  selectedTeamIndex.value = emblaTeamApi.value.selectedScrollSnap();
+  emblaTeamThumbnailApi.value.scrollTo(emblaTeamApi.value.selectedScrollSnap());
+}
+
+function onTeamThumbClick(index: number) {
+  if (!emblaTeamApi.value || !emblaTeamThumbnailApi.value)
+    return;
+  emblaTeamApi.value.scrollTo(index);
+}
+
+watchOnce(emblaTeamApi, (emblaTeamApi) => {
+  if (!emblaTeamApi)
+    return;
+
+  onTeamSelect();
+  emblaTeamApi.on("select", onTeamSelect);
+  emblaTeamApi.on("reInit", onTeamSelect);
+});
+
+// 图片预览功能
+const isImagePreviewOpen = ref(false);
+const previewImageSrc = ref('');
+const previewImageAlt = ref('');
+
+function openImagePreview(src: string, alt: string) {
+  previewImageSrc.value = src;
+  previewImageAlt.value = alt;
+  isImagePreviewOpen.value = true;
+}
+
+function closeImagePreview() {
+  isImagePreviewOpen.value = false;
+}
 
 const batchCard = ref<BatchCardType[]>([
   {
@@ -126,96 +197,191 @@ onMounted(() => {
 </script>
 
 <template>
-  <navigationTop class="top"></navigationTop>
-  <!-- Back to top button using Tailwind -->
-  <button
-    @click="scroollTo"
-    class="fixed bottom-4 right-4 z-50 bg-primary text-primary-foreground p-3 rounded-full shadow-lg hover:bg-primary/90 transition-colors"
-    aria-label="回到顶部"
-  >
-    ↑
-  </button>
+  <div class="min-h-screen">
 
-  <div class="flex flex-col w-full min-h-screen bg-white/60">
-    <!-- Main carousel -->
-    <Carousel class="w-full h-[400px]" :opts="{ loop: true }">
-      <CarouselContent>
-        <CarouselItem v-for="item in carouselPhoto" :key="item.src">
-          <img :class="item.class" :src="item.src" :alt="item.alt" />
-        </CarouselItem>
-      </CarouselContent>
-      <CarouselPrevious />
-      <CarouselNext />
-    </Carousel>
+    <!-- Hero Section with Enhanced Carousel -->
+    <div class="w-full">
+      <!-- Main Carousel -->
+      <Carousel class="relative w-full h-[50vh] max-h-[600px]" :opts="{ loop: true }"
+        @init-api="(val) => emblaMainApi = val">
+        <CarouselContent>
+          <CarouselItem v-for="(item, _) in carouselPhoto" :key="item.src">
+            <div class="relative h-[50vh] max-h-[600px]">
+              <img :src="item.src" :alt="item.alt" class="w-full h-full object-cover" />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+              <!-- Hero Content Overlay -->
+              <div class="absolute inset-0 flex items-center justify-center z-20">
+                <div class="text-center text-white max-w-4xl px-6 drop-shadow">
+                  <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold mb-6">
+                    AchoBeta
+                  </h1>
+                  <p class="text-xl md:text-2xl mb-8">
+                    创新 · 协作 · 成长
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CarouselItem>
+        </CarouselContent>
+        <CarouselPrevious
+          class="left-4 md:left-6 bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm" />
+        <CarouselNext
+          class="right-4 md:right-6 bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm" />
+      </Carousel>
 
-    <!-- Content sections -->
-    <Introduce>
-      <template #title>
-        <div class="card-title">
-          <p class="english-title">Recruitment activities</p>
-          <p class="chinese-title">招新批次</p>
-        </div>
-      </template>
-      <template #content>
-        <activitiesCard
-          v-for="item in batchCard"
-          @toAnother="
-            toApplication(item.id, item.cardDescription.title as string)
-          "
-          :cardMain="item.cardDescription"
-        ></activitiesCard>
-      </template>
-    </Introduce>
-
-    <Introduce>
-      <template #title>
-        <div class="card-title">
-          <p class="english-title">Recruitment process</p>
-          <p class="chinese-title"><b>招新流程</b></p>
-        </div>
-      </template>
-      <template #content>
-        <processIntroduce></processIntroduce>
-      </template>
-    </Introduce>
-
-    <Introduce>
-      <template #title>
-        <div class="card-title">
-          <p class="english-title">Team Introduction</p>
-          <p class="chinese-title"><b>团队产品</b></p>
-        </div>
-      </template>
-      <template #content>
-        <!-- Team carousel with card effect -->
-        <Carousel
-          class="w-full h-[240px]"
-          :opts="{
-            loop: true,
-            align: 'center',
-          }"
-        >
-          <CarouselContent class="-ml-2 md:-ml-4">
-            <CarouselItem
-              v-for="item in teamPhoto"
-              :key="item.src"
-              class="pl-2 md:pl-4 basis-3/5"
-            >
-              <div class="p-1">
-                <img
-                  :class="item.class"
-                  :src="item.src"
-                  :alt="item.alt"
-                  class="rounded-lg shadow-md"
-                />
+      <!-- Thumbnail Carousel -->
+      <div class="container mx-auto px-4 md:px-6 py-6">
+        <Carousel class="relative w-full max-w-2xl mx-auto" :opts="{ loop: true, align: 'center' }"
+          @init-api="(val) => emblaThumbnailApi = val">
+          <CarouselContent class="flex gap-2 ml-0">
+            <CarouselItem v-for="(item, index) in carouselPhoto" :key="item.src"
+              class="pl-0 basis-1/2 sm:basis-1/3 md:basis-1/4 cursor-pointer" @click="onThumbClick(index)">
+              <div class="p-1 transition-all duration-300"
+                :class="index === selectedIndex ? 'scale-105' : 'opacity-60 hover:opacity-80'">
+                <Card class="overflow-hidden border-2 transition-all duration-300"
+                  :class="index === selectedIndex ? 'border-blue-500 shadow-lg' : 'border-transparent'">
+                  <CardContent class="p-0">
+                    <img :src="item.src" :alt="item.alt"
+                      class="w-full aspect-video object-cover transition-all duration-300" />
+                  </CardContent>
+                </Card>
               </div>
             </CarouselItem>
           </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
         </Carousel>
-      </template>
-    </Introduce>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-6 py-16 space-y-24">
+      <!-- Recruitment Activities Section -->
+      <section class="relative">
+        <div class="text-center mb-16">
+          <div class="inline-block">
+            <h2 class="text-4xl md:text-5xl font-bold mb-4">
+              Recruitment Activities
+            </h2>
+            <div class="h-1 w-32 mx-auto mb-4"></div>
+          </div>
+          <p class="text-xl text-gray-600 font-medium">招新批次</p>
+        </div>
+
+        <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <Card v-for="item in batchCard" :key="item.id"
+            class="group cursor-pointer hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-gradient-to-br from-white to-blue-50/50 border-0 shadow-lg"
+            @click="toApplication(item.id, item.cardDescription.title as string)">
+            <CardHeader class="pb-4">
+              <CardTitle class="text-xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors">
+                {{ item.cardDescription.title }}
+              </CardTitle>
+              <CardDescription class="text-gray-600">
+                {{ item.cardDescription.content }}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p class="text-sm text-gray-500 mb-6">{{ item.cardDescription.footer }}</p>
+              <div class="flex justify-end">
+                <Button variant="outline" size="sm"
+                  class="group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all duration-300">
+                  查看详情
+                  <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      <!-- Recruitment Process Section -->
+      <section class="relative">
+        <div class="text-center mb-16">
+          <div class="inline-block">
+            <h2 class="text-4xl md:text-5xl font-bold mb-4">
+              Recruitment Process
+            </h2>
+            <div class="h-1 w-32 mx-auto mb-4"></div>
+          </div>
+          <p class="text-xl text-gray-600 font-medium">招新流程</p>
+        </div>
+
+        <Card class="bg-gradient-to-br from-white to-purple-50/50 border-0 shadow-xl">
+          <CardContent class="p-8">
+            <processIntroduce />
+          </CardContent>
+        </Card>
+      </section>
+
+      <!-- Team Introduction Section -->
+      <section class="relative">
+        <div class="text-center mb-16">
+          <div class="inline-block">
+            <h2 class="text-4xl md:text-5xl font-bold mb-4">
+              Team Introduction
+            </h2>
+            <div class="h-1 w-32mx-auto mb-4"></div>
+          </div>
+          <p class="text-xl font-medium">团队产品</p>
+        </div>
+
+        <!-- Grid Layout -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Card v-for="(item, _) in teamPhoto" :key="item.src" class="overflow-hidden border-0 shadow-xl cursor-pointer"
+            @click="openImagePreview(item.src, item.alt)">
+            <CardContent class="p-0 relative">
+              <img :src="item.src" :alt="item.alt"
+                class="w-full h-48 object-cover transition-transform duration-500 hover:scale-105" />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+              <!-- Click to enlarge hint -->
+              <div
+                class="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm">
+                点击放大
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+    </div>
+
+    <!-- Footer Section -->
+    <footer class="bg-gradient-to-r from-gray-900 to-blue-900 text-white py-16 mt-24">
+      <div class="container mx-auto px-6 text-center">
+        <h3 class="text-2xl font-bold mb-4">AchoBeta</h3>
+        <p class="text-gray-300 mb-8">创新技术，成就未来</p>
+        <!-- <div class="flex justify-center space-x-6">
+          <Button variant="ghost">
+            关于我们
+          </Button>
+          <Button variant="ghost">
+            联系方式
+          </Button>
+          <Button variant="ghost">
+            加入我们
+          </Button>
+        </div> -->
+      </div>
+    </footer>
+
+    <!-- Image Preview Modal -->
+    <div v-if="isImagePreviewOpen" class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
+      @click="closeImagePreview">
+      <div class="relative max-w-[90vw] max-h-[90vh] p-4">
+        <!-- Close Button -->
+        <Button @click="closeImagePreview"
+          class="absolute -top-2 -right-2 z-10 h-8 w-8 rounded-full bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm"
+          size="icon" variant="outline">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </Button>
+
+        <!-- Preview Image -->
+        <img :src="previewImageSrc" :alt="previewImageAlt"
+          class="max-w-full max-h-full object-contain rounded-lg shadow-2xl" @click.stop />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -225,47 +391,5 @@ onMounted(() => {
   src: url("@/assets/ttf/JetBrainsMono-ExtraBoldItalic.ttf");
 }
 
-.top {
-  z-index: 999;
-  position: sticky;
-  top: 0;
-}
-
-.float-button {
-  z-index: 999;
-}
-
-.english-title {
-  font-family: JetBrains-ExtraBoldItalic;
-  font-size: 1.4rem;
-  padding-left: 3%;
-}
-
-.layout {
-  width: 100vw;
-  height: auto;
-  background-color: rgba(255, 255, 255, 0.612);
-}
-
-.chinese-title {
-  font-family: "楷体";
-  font-size: 1.5rem;
-  font-weight: bold;
-  padding-left: 3%;
-}
-
-.carousel-box {
-  height: 400px;
-}
-
-.carousel-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.card-title {
-  margin-top: 20px;
-  margin-bottom: 10px;
-}
+/* 使用 shadcn 官方样式，无需额外自定义CSS */
 </style>

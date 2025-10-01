@@ -1,10 +1,13 @@
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 
-export const useStore = defineStore(
-  "store",
+export const useAuthStore = defineStore(
+  "auth",
   () => {
     const token = ref<string>("");
+
+    // 计算属性：登录状态
+    const isLoggedIn = computed(() => !!token.value);
 
     function setToken(newToken: string) {
       token.value = newToken;
@@ -12,16 +15,25 @@ export const useStore = defineStore(
 
     function clearToken() {
       token.value = "";
-      localStorage.removeItem("store");
+    }
+
+    function logout() {
+      clearToken();
+      // 清理其他相关数据
+      localStorage.removeItem("auth");
     }
 
     return {
       token,
+      isLoggedIn,
       setToken,
       clearToken,
+      logout,
     };
   },
   {
-    persist: true,
+    persist: {
+      key: "auth",
+    },
   },
 );
