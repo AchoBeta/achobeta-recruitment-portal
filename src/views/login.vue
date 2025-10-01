@@ -147,7 +147,7 @@ const emailCodeValue = computed<string | number | undefined>({
 });
 </script>
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 p-4">
+  <div class="min-h-screen flex items-center justify-center p-4">
     <Card class="mx-auto w-full sm:max-w-sm">
       <CardHeader>
         <CardTitle class="text-2xl">
@@ -172,7 +172,7 @@ const emailCodeValue = computed<string | number | undefined>({
             </div>
             <Input id="code" v-model="emailCodeValue" placeholder="请输入验证码" required />
           </div>
-          <div class="text-xs text-gray-500 text-center">
+          <div class="text-xs text-muted-foreground text-center">
             无账号将自动注册
           </div>
           <Button @click="login" type="submit" class="w-full">

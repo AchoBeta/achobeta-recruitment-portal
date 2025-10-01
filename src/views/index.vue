@@ -71,12 +71,6 @@ function onTeamSelect() {
   emblaTeamThumbnailApi.value.scrollTo(emblaTeamApi.value.selectedScrollSnap());
 }
 
-function onTeamThumbClick(index: number) {
-  if (!emblaTeamApi.value || !emblaTeamThumbnailApi.value)
-    return;
-  emblaTeamApi.value.scrollTo(index);
-}
-
 watchOnce(emblaTeamApi, (emblaTeamApi) => {
   if (!emblaTeamApi)
     return;
@@ -197,7 +191,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen">
+  <div class="min-h-screen bg-background text-foreground">
 
     <!-- Hero Section with Enhanced Carousel -->
     <div class="w-full">
@@ -208,7 +202,8 @@ onMounted(() => {
           <CarouselItem v-for="(item, _) in carouselPhoto" :key="item.src">
             <div class="relative h-[50vh] max-h-[600px]">
               <img :src="item.src" :alt="item.alt" class="w-full h-full object-cover" />
-              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent hero-overlay">
+              </div>
               <!-- Hero Content Overlay -->
               <div class="absolute inset-0 flex items-center justify-center z-20">
                 <div class="text-center text-white max-w-4xl px-6 drop-shadow">
@@ -224,9 +219,9 @@ onMounted(() => {
           </CarouselItem>
         </CarouselContent>
         <CarouselPrevious
-          class="left-4 md:left-6 bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm" />
+          class="left-4 md:left-6 bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm carousel-nav" />
         <CarouselNext
-          class="right-4 md:right-6 bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm" />
+          class="right-4 md:right-6 bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm carousel-nav" />
       </Carousel>
 
       <!-- Thumbnail Carousel -->
@@ -239,10 +234,9 @@ onMounted(() => {
               <div class="p-1 transition-all duration-300"
                 :class="index === selectedIndex ? 'scale-105' : 'opacity-60 hover:opacity-80'">
                 <Card class="overflow-hidden border-2 transition-all duration-300"
-                  :class="index === selectedIndex ? 'border-blue-500 shadow-lg' : 'border-transparent'">
+                  :class="index === selectedIndex ? 'border-primary shadow-lg' : 'border-transparent'">
                   <CardContent class="p-0">
-                    <img :src="item.src" :alt="item.alt"
-                      class="w-full aspect-video object-cover transition-all duration-300" />
+                    <img :src="item.src" :alt="item.alt" class="w-full transition-all duration-300" />
                   </CardContent>
                 </Card>
               </div>
@@ -255,34 +249,33 @@ onMounted(() => {
     <!-- Main Content -->
     <div class="container mx-auto px-6 py-16 space-y-24">
       <!-- Recruitment Activities Section -->
-      <section class="relative">
+      <section id="recruitment-batches" class="relative">
         <div class="text-center mb-16">
           <div class="inline-block">
-            <h2 class="text-4xl md:text-5xl font-bold mb-4">
+            <h2 class="text-4xl md:text-5xl font-bold mb-4 text-foreground">
               Recruitment Activities
             </h2>
             <div class="h-1 w-32 mx-auto mb-4"></div>
           </div>
-          <p class="text-xl text-gray-600 font-medium">招新批次</p>
+          <p class="text-xl text-muted-foreground font-medium">招新批次</p>
         </div>
 
         <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          <Card v-for="item in batchCard" :key="item.id"
-            class="group cursor-pointer hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-gradient-to-br from-white to-blue-50/50 border-0 shadow-lg"
+          <Card v-for="item in batchCard" :key="item.id" class="group cursor-pointer"
             @click="toApplication(item.id, item.cardDescription.title as string)">
             <CardHeader class="pb-4">
-              <CardTitle class="text-xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors">
+              <CardTitle class="text-xl font-bold text-card-foreground group-hover:text-primary transition-colors">
                 {{ item.cardDescription.title }}
               </CardTitle>
-              <CardDescription class="text-gray-600">
+              <CardDescription class="text-muted-foreground">
                 {{ item.cardDescription.content }}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p class="text-sm text-gray-500 mb-6">{{ item.cardDescription.footer }}</p>
+              <p class="text-sm text-muted-foreground mb-6">{{ item.cardDescription.footer }}</p>
               <div class="flex justify-end">
                 <Button variant="outline" size="sm"
-                  class="group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all duration-300">
+                  class="group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all duration-300">
                   查看详情
                   <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none"
                     stroke="currentColor" viewBox="0 0 24 24">
@@ -296,18 +289,18 @@ onMounted(() => {
       </section>
 
       <!-- Recruitment Process Section -->
-      <section class="relative">
+      <section id="recruitment-process" class="relative">
         <div class="text-center mb-16">
           <div class="inline-block">
-            <h2 class="text-4xl md:text-5xl font-bold mb-4">
+            <h2 class="text-4xl md:text-5xl font-bold mb-4 text-foreground">
               Recruitment Process
             </h2>
             <div class="h-1 w-32 mx-auto mb-4"></div>
           </div>
-          <p class="text-xl text-gray-600 font-medium">招新流程</p>
+          <p class="text-xl text-muted-foreground font-medium">招新流程</p>
         </div>
 
-        <Card class="bg-gradient-to-br from-white to-purple-50/50 border-0 shadow-xl">
+        <Card class="bg-gradient-to-br from-card to-secondary/20 border-0 shadow-xl process-card">
           <CardContent class="p-8">
             <processIntroduce />
           </CardContent>
@@ -318,22 +311,22 @@ onMounted(() => {
       <section class="relative">
         <div class="text-center mb-16">
           <div class="inline-block">
-            <h2 class="text-4xl md:text-5xl font-bold mb-4">
+            <h2 class="text-4xl md:text-5xl font-bold mb-4 text-foreground">
               Team Introduction
             </h2>
-            <div class="h-1 w-32mx-auto mb-4"></div>
+            <div class="h-1 w-32 mx-auto mb-4"></div>
           </div>
-          <p class="text-xl font-medium">团队产品</p>
+          <p class="text-xl font-medium text-muted-foreground">团队产品</p>
         </div>
 
         <!-- Grid Layout -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card v-for="(item, _) in teamPhoto" :key="item.src" class="overflow-hidden border-0 shadow-xl cursor-pointer"
+          <Card v-for="(item, _) in teamPhoto" :key="item.src" class="overflow-hidden cursor-pointer"
             @click="openImagePreview(item.src, item.alt)">
             <CardContent class="p-0 relative">
               <img :src="item.src" :alt="item.alt"
-                class="w-full h-48 object-cover transition-transform duration-500 hover:scale-105" />
-              <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                class="w-full h-48 object-contain transition-transform duration-500 hover:scale-105" />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent team-overlay"></div>
               <!-- Click to enlarge hint -->
               <div
                 class="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm">
@@ -346,10 +339,10 @@ onMounted(() => {
     </div>
 
     <!-- Footer Section -->
-    <footer class="bg-gradient-to-r from-gray-900 to-blue-900 text-white py-16 mt-24">
+    <footer class="border-t py-16 mt-24">
       <div class="container mx-auto px-6 text-center">
         <h3 class="text-2xl font-bold mb-4">AchoBeta</h3>
-        <p class="text-gray-300 mb-8">创新技术，成就未来</p>
+        <p class="mb-8">创新技术，成就未来</p>
         <!-- <div class="flex justify-center space-x-6">
           <Button variant="ghost">
             关于我们
@@ -365,12 +358,13 @@ onMounted(() => {
     </footer>
 
     <!-- Image Preview Modal -->
-    <div v-if="isImagePreviewOpen" class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
+    <div v-if="isImagePreviewOpen"
+      class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/50 modal-overlay"
       @click="closeImagePreview">
       <div class="relative max-w-[90vw] max-h-[90vh] p-4">
         <!-- Close Button -->
         <Button @click="closeImagePreview"
-          class="absolute -top-2 -right-2 z-10 h-8 w-8 rounded-full bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm"
+          class="absolute -top-2 -right-2 z-10 h-8 w-8 rounded-full bg-background/20 border-border/30 text-foreground hover:bg-background/30 backdrop-blur-sm"
           size="icon" variant="outline">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -384,12 +378,3 @@ onMounted(() => {
     </div>
   </div>
 </template>
-
-<style scoped>
-@font-face {
-  font-family: JetBrains-ExtraBoldItalic;
-  src: url("@/assets/ttf/JetBrainsMono-ExtraBoldItalic.ttf");
-}
-
-/* 使用 shadcn 官方样式，无需额外自定义CSS */
-</style>

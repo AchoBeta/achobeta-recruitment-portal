@@ -52,21 +52,21 @@ const toAnother = (path: number) => {
 const navigationData = {
   navMain: [
     {
-      title: "主要功能",
+      title: "主页",
       items: [
         {
-          title: "关于我们",
-          action: () => toAnother(1),
+          title: "首页",
+          action: () => router.push("/index"),
           isActive: false,
         },
         {
-          title: "我的面试",
-          action: () => toAnother(2),
+          title: "招新批次",
+          action: () => router.push("/index#recruitment-batches"),
           isActive: false,
         },
         {
-          title: "个人信息",
-          action: () => toAnother(3),
+          title: "招新流程",
+          action: () => router.push("/index#recruitment-process"),
           isActive: false,
         },
       ],
@@ -76,7 +76,15 @@ const navigationData = {
       items: [
         {
           title: isLogin.value ? "退出登录" : "登录",
-          action: () => toAnother(4),
+          action: () => {
+            if (isLogin.value) {
+              storage.clearToken();
+              toast.success("已退出登录");
+              router.push("/login");
+            } else {
+              router.push("/login");
+            }
+          },
           isActive: false,
         },
       ],
@@ -87,39 +95,38 @@ const navigationData = {
 
 <template>
   <Sidebar>
-    <SidebarHeader class="border-b border-gray-100 p-6">
+    <SidebarHeader class="border-b p-6">
       <div class="flex items-center gap-3">
         <img src="/src/assets/achoBeta.png" class="h-10 w-10" alt="AchoBeta Logo" />
         <div>
-          <h2 class="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h2 class="text-xl font-bold">
             AchoBeta
           </h2>
-          <p class="text-sm text-gray-500">招新</p>
+          <p class="text-sm">招新</p>
         </div>
       </div>
-      <div class="mt-4 flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+      <!-- <div class="mt-4 flex items-center gap-3 p-3 rounded-lg">
         <img src="/src/assets/avatar.jpg" class="h-8 w-8 rounded-full" alt="用户头像" />
         <div class="flex-1">
-          <p class="text-sm font-medium text-gray-900">
+          <p class="text-sm font-medium">
             {{ isLogin ? "已登录用户" : "未登录" }}
           </p>
-          <p class="text-xs text-gray-500">
+          <p class="text-xs">
             {{ isLogin ? "欢迎回来" : "请先登录" }}
           </p>
         </div>
-      </div>
+      </div> -->
     </SidebarHeader>
 
     <SidebarContent>
       <SidebarGroup v-for="group in navigationData.navMain" :key="group.title">
-        <SidebarGroupLabel class="text-gray-600 font-medium">
+        <SidebarGroupLabel class="font-medium">
           {{ group.title }}
         </SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
             <SidebarMenuItem v-for="item in group.items" :key="item.title">
-              <SidebarMenuButton @click="item.action" :is-active="item.isActive"
-                class="hover:bg-blue-50 hover:text-blue-700 transition-colors">
+              <SidebarMenuButton @click="item.action" :is-active="item.isActive">
                 <span>{{ item.title }}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>

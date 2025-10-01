@@ -23,6 +23,8 @@ import {
 const statuslist = ref<statusList[]>([]); //对应码号，说明简历的状态（待筛之类？其实我认为两者概念似乎倒转了）
 const eventlist = ref<eventList[]>([]); //对应码号，说明简历所处事件状态
 const resumeprocess = ref<resumeProcess[]>([]);
+const loading = ref(true);
+const error = ref<string | null>(null);
 const eventColor = [
   "green",
   "green",
@@ -35,59 +37,89 @@ const eventColor = [
 const storage = useAuthStore();
 const idStore = useIdStore();
 
-onMounted(async () => {
-  let batchId: string = "";
-  if (idStore.getBatchId() != null) {
-    //如果地址栏不为空
-    batchId = idStore.getBatchId() as string;
-  } else {
-    toast.error("请先选择你的招新批次!!!");
+const retryLoad = () => {
+  if (typeof window !== 'undefined') {
+    window.location.reload();
   }
+};
 
-  await getStatusList(storage.token).then((res) => {
-    if (res.data.code === 200) {
-      console.log(res);
-      res.data.data.forEach((item: statusList) => {
-        statuslist.value.push({
-          code: item.code,
-          message: item.message,
-        });
-      });
+// 获取指示器的 Tailwind 类
+const getIndicatorClasses = (colorClass: string) => {
+  switch (colorClass) {
+    case 'green':
+      return 'bg-green-100 border-2 border-green-500 text-green-600';
+    case 'red':
+      return 'bg-red-100 border-2 border-red-500 text-red-600';
+    case 'yellow':
+      return 'bg-yellow-100 border-2 border-yellow-500 text-yellow-600';
+    case 'gray':
+    default:
+      return 'bg-gray-100 border-2 border-gray-400 text-gray-500';
+  }
+};
+
+onMounted(async () => {
+  try {
+    loading.value = true;
+    error.value = null;
+
+    let batchId: string = "";
+    const storedBatchId = idStore.getBatchId();
+    if (storedBatchId && storedBatchId.trim() !== "") {
+      //如果地址栏不为空
+      batchId = storedBatchId;
     } else {
-      toast.warning(res.data.message);
+      error.value = "请先选择你的招新批次!!!";
+      toast.error("请先选择你的招新批次!!!");
+      loading.value = false;
+      return; // 如果没有 batchId，直接返回，不执行后续 API 调用
     }
-  });
 
-  await getEventList(storage.token).then((res) => {
-    if (res.data.code === 200) {
-      console.log(res);
+    // 并行获取状态列表和事件列表
+    const [statusRes, eventRes] = await Promise.all([
+      getStatusList(storage.token),
+      getEventList(storage.token)
+    ]);
 
-      res.data.data.forEach((item: eventList) => {
-        eventlist.value.push({
-          event: item.event,
-          description: item.description,
-        });
-      });
+    if (statusRes.data.code === 200) {
+      statuslist.value = statusRes.data.data.map((item: statusList) => ({
+        code: item.code,
+        message: item.message,
+      }));
     } else {
-      toast.warning(res.data.message);
+      toast.warning(statusRes.data.message);
+      error.value = statusRes.data.message;
     }
-  });
 
-  getResumeStatus(storage.token, batchId).then((res) => {
-    if (res.data.code === 200) {
-      console.log(res);
-
-      res.data.data.forEach((item: resumeProcess) => {
-        resumeprocess.value.push({
-          resumeStatus: item.resumeStatus,
-          resumeEvent: item.resumeEvent,
-          createTime: item.createTime,
-        });
-      });
+    if (eventRes.data.code === 200) {
+      eventlist.value = eventRes.data.data.map((item: eventList) => ({
+        event: item.event,
+        description: item.description,
+      }));
     } else {
-      toast.warning(res.data.message);
+      toast.warning(eventRes.data.message);
+      error.value = eventRes.data.message;
     }
-  });
+
+    // 获取简历状态
+    const resumeRes = await getResumeStatus(storage.token, batchId);
+    if (resumeRes.data.code === 200) {
+      resumeprocess.value = resumeRes.data.data.map((item: resumeProcess) => ({
+        resumeStatus: item.resumeStatus,
+        resumeEvent: item.resumeEvent,
+        createTime: item.createTime,
+      }));
+    } else {
+      toast.warning(resumeRes.data.message);
+      error.value = resumeRes.data.message;
+    }
+  } catch (err) {
+    console.error('加载流程数据失败:', err);
+    error.value = '加载数据失败，请稍后重试';
+    toast.error('加载数据失败，请稍后重试');
+  } finally {
+    loading.value = false;
+  }
 });
 
 const swtichStatus = (id: number) => {
@@ -103,7 +135,7 @@ const stepperData = computed(() => {
     const statusMessage = statuslist.value[item.resumeStatus as number]?.message || '';
     const eventDescription = eventlist.value[(item.resumeEvent as number) - 1]?.description || '';
     const eventColorIndex = (item.resumeEvent as number) - 1;
-    
+
     return {
       step: index + 1,
       title: statusMessage,
@@ -117,145 +149,71 @@ const stepperData = computed(() => {
 </script>
 
 <template>
-  <div class="process-layout">
-    <div class="box">
-      <Stepper orientation="vertical" class="stepper-container">
-        <StepperItem 
-          v-for="(stepData, index) in stepperData" 
-          :key="stepData.step" 
-          :step="stepData.step"
-          class="step-item"
+  <div class="w-full py-8 min-h-[80vh] bg-blue-50">
+    <div class="w-[90vw] mx-auto bg-white rounded-3xl shadow-lg p-8">
+      <!-- 加载状态 -->
+      <div v-if="loading" class="flex flex-col items-center justify-center py-16 space-y-4">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <p class="text-gray-600 text-lg">正在加载流程信息...</p>
+      </div>
+      
+      <!-- 错误状态 -->
+      <div v-else-if="error" class="flex flex-col items-center justify-center py-16 space-y-4">
+        <div class="text-6xl">⚠️</div>
+        <p class="text-red-600 text-lg font-medium">{{ error }}</p>
+        <button 
+          @click="retryLoad" 
+          class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
-          <StepperTrigger class="step-trigger">
-            <StepperIndicator :class="['step-indicator', stepData.colorClass]">
-              {{ stepData.indicator }}
-            </StepperIndicator>
-            <div class="step-content">
-              <StepperTitle class="step-title">
-                {{ stepData.title }}
-              </StepperTitle>
-              <StepperDescription class="step-description">
-                {{ stepData.description }}
-              </StepperDescription>
-              <div class="step-time">
-                {{ stepData.time }}
+          重试
+        </button>
+      </div>
+      
+      <!-- 正常内容 -->
+      <div v-else-if="stepperData.length > 0">
+        <Stepper orientation="vertical" class="w-full">
+          <StepperItem 
+            v-for="(stepData, index) in stepperData" 
+            :key="stepData.step" 
+            :step="stepData.step"
+            class="mb-4"
+          >
+            <StepperTrigger class="flex items-start gap-4 py-2 cursor-default">
+              <StepperIndicator 
+                :class="[
+                  'flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full font-semibold text-sm',
+                  getIndicatorClasses(stepData.colorClass)
+                ]"
+              >
+                {{ stepData.indicator }}
+              </StepperIndicator>
+              <div class="flex-1 min-w-0">
+                <StepperTitle class="font-semibold text-base text-gray-900 mb-1">
+                  {{ stepData.title }}
+                </StepperTitle>
+                <StepperDescription class="text-sm text-gray-600 leading-relaxed mb-1">
+                  {{ stepData.description }}
+                </StepperDescription>
+                <div class="text-xs text-gray-400 italic">
+                  {{ stepData.time }}
+                </div>
               </div>
-            </div>
-          </StepperTrigger>
-          <StepperSeparator v-if="index < stepperData.length - 1" class="step-separator" />
-        </StepperItem>
-      </Stepper>
+            </StepperTrigger>
+            <StepperSeparator v-if="index < stepperData.length - 1" class="ml-4 h-6" />
+          </StepperItem>
+        </Stepper>
+      </div>
+      
+      <!-- 空状态 -->
+      <div v-else class="flex flex-col items-center justify-center py-16 space-y-4">
+        <div class="text-6xl">📋</div>
+        <p class="text-gray-700 text-lg font-medium">暂无流程信息</p>
+        <p class="text-gray-500 text-sm">请确保已选择正确的招新批次</p>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.top {
-  z-index: 999;
-  position: sticky;
-  top: 0;
-}
-
-.process-layout {
-  width: 100vw;
-  padding: 2vh 0 2vh 0;
-  min-height: 80vh;
-  box-sizing: border-box;
-}
-
-.box {
-  width: 90vw;
-  margin: 0 5vw 0 auto;
-  border-width: none;
-  border-color: white;
-  box-shadow: 0 0 20px #b5b2b2;
-  padding: 4vh 2vw 4vh 2vw;
-  border-radius: 20px;
-  background: white;
-}
-
-.stepper-container {
-  width: 100%;
-}
-
-.step-item {
-  margin-bottom: 1rem;
-}
-
-.step-trigger {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 0.5rem 0;
-  cursor: default;
-}
-
-.step-indicator {
-  flex-shrink: 0;
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: #f3f4f6;
-  border: 2px solid #d1d5db;
-  font-weight: 600;
-  font-size: 0.875rem;
-}
-
-.step-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.step-title {
-  font-weight: 600;
-  font-size: 1rem;
-  color: #111827;
-  margin-bottom: 0.25rem;
-}
-
-.step-description {
-  font-size: 0.875rem;
-  color: #6b7280;
-  line-height: 1.4;
-  margin-bottom: 0.25rem;
-}
-
-.step-time {
-  font-size: 0.75rem;
-  color: #9ca3af;
-  font-style: italic;
-}
-
-.step-separator {
-  margin-left: 1rem;
-  height: 1.5rem;
-}
-
-/* 颜色类 */
-.green {
-  background: #dcfce7 !important;
-  border-color: #16a34a !important;
-  color: #16a34a !important;
-}
-
-.red {
-  background: #fecaca !important;
-  border-color: #dc2626 !important;
-  color: #dc2626 !important;
-}
-
-.gray {
-  background: #f3f4f6 !important;
-  border-color: #b5b2b2 !important;
-  color: #b5b2b2 !important;
-}
-
-.yellow {
-  background: #fef3c7 !important;
-  border-color: #f5cd4a !important;
-  color: #f5cd4a !important;
-}
+/* 所有样式已迁移到 Tailwind CSS */
 </style>

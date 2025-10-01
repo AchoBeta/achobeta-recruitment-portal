@@ -1,10 +1,8 @@
 <script lang="ts" setup>
 import { formType, attachmentList } from "@/utils/type/formType";
-// import { PropTypes } from '@/utils/propTypes'
-import { ref, onMounted, watch, onBeforeUnmount } from "vue";
+import { ref, onMounted, watch, onBeforeUnmount, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import titleBlock from "@/components/titleBlock.vue";
-import Add12Filled from "@vicons/fluent/Add12Filled";
 import {
   submitResume,
   queryResume,
@@ -18,13 +16,16 @@ import { toast } from "vue-sonner";
 import { deCode } from "@/utils/URIProtect";
 import { useIdStore } from "@/store/idStore";
 
+// AutoForm imports
+import { AutoForm } from "@/components/ui/auto-form";
+import { resumeFormSchema, type ResumeFormData } from "@/utils/schemas/resumeSchema";
+
 // shadcn-vue imports
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -101,6 +102,156 @@ const form = ref<formType>({
     stateCount: 999, //剩余可提交次数
   },
   stuAttachmentDTOList: [],
+});
+
+// AutoForm数据转换
+const autoFormData = computed({
+  get(): Partial<ResumeFormData> {
+    const dto = form.value.stuSimpleResumeDTO;
+    return {
+      name: dto.name || '',
+      studentId: dto.studentId || '',
+      gender: dto.gender === 0 ? '0' : dto.gender === 1 ? '1' : undefined,
+      grade: dto.grade || 2024,
+      major: dto.major || '',
+      className: dto.className || '',
+      email: dto.email || '',
+      phoneNumber: dto.phoneNumber || '',
+      reason: dto.reason || '',
+      introduce: dto.introduce || '',
+      experience: dto.experience || '',
+      awards: dto.awards || '',
+      remark: dto.remark || '',
+    };
+  },
+  set(value: Partial<ResumeFormData>) {
+    const dto = form.value.stuSimpleResumeDTO;
+    if (value.name !== undefined) dto.name = value.name;
+    if (value.studentId !== undefined) dto.studentId = value.studentId;
+    if (value.gender !== undefined) dto.gender = parseInt(value.gender);
+    if (value.grade !== undefined) dto.grade = value.grade;
+    if (value.major !== undefined) dto.major = value.major;
+    if (value.className !== undefined) dto.className = value.className;
+    if (value.email !== undefined) dto.email = value.email;
+    if (value.phoneNumber !== undefined) dto.phoneNumber = value.phoneNumber;
+    if (value.reason !== undefined) dto.reason = value.reason;
+    if (value.introduce !== undefined) dto.introduce = value.introduce;
+    if (value.experience !== undefined) dto.experience = value.experience;
+    if (value.awards !== undefined) dto.awards = value.awards;
+    if (value.remark !== undefined) dto.remark = value.remark;
+  }
+});
+
+// AutoForm字段配置
+const fieldConfig = {
+  name: {
+    label: '姓名',
+    inputProps: {
+      placeholder: '请填写姓名',
+      class: 'w-full'
+    }
+  },
+  studentId: {
+    label: '学号',
+    inputProps: {
+      placeholder: '11~13位学号',
+      class: 'w-full'
+    }
+  },
+  gender: {
+    label: '性别',
+    component: 'radio' as const,
+    inputProps: {
+      class: 'flex gap-4'
+    }
+  },
+  grade: {
+    label: '年级',
+    component: 'number' as const,
+    inputProps: {
+      placeholder: '20xx格式填写',
+      class: 'w-full'
+    }
+  },
+  major: {
+    label: '专业 ( 乱填后果自负!! )',
+    inputProps: {
+      placeholder: '请填写专业',
+      class: 'w-full'
+    }
+  },
+  className: {
+    label: '班级 ( 乱填后果自负!! )',
+    inputProps: {
+      placeholder: '请以班级+班号格式填写',
+      class: 'w-full'
+    }
+  },
+  email: {
+    label: '邮箱',
+    component: 'string' as const,
+    inputProps: {
+      type: 'email',
+      placeholder: '请填写常用邮箱',
+      class: 'w-full'
+    }
+  },
+  phoneNumber: {
+    label: '手机号',
+    inputProps: {
+      placeholder: '请填写常用手机号',
+      class: 'w-full'
+    }
+  },
+  introduce: {
+    label: '简介',
+    component: 'textarea' as const,
+    inputProps: {
+      placeholder: '请填写个人简介',
+      class: 'w-full min-h-[100px]'
+    }
+  },
+  experience: {
+    label: '经历',
+    component: 'textarea' as const,
+    inputProps: {
+      placeholder: '请填写个人经历',
+      class: 'w-full min-h-[100px]'
+    }
+  },
+  awards: {
+    label: '获奖经历',
+    component: 'textarea' as const,
+    inputProps: {
+      placeholder: '请填写获奖经历',
+      class: 'w-full min-h-[100px]'
+    }
+  },
+  reason: {
+    label: '加入理由',
+    component: 'textarea' as const,
+    inputProps: {
+      placeholder: '请填写加入理由',
+      class: 'w-full min-h-[100px]'
+    }
+  },
+  remark: {
+    label: '备注',
+    inputProps: {
+      placeholder: '可选填备注',
+      class: 'w-full'
+    }
+  }
+};
+
+// 表单验证状态
+const isFormValid = computed(() => {
+  try {
+    resumeFormSchema.parse(autoFormData.value);
+    return true;
+  } catch {
+    return false;
+  }
 });
 
 //删除附件列表中不需要的资源
@@ -544,7 +695,7 @@ onMounted(() => {
     toast.error("请先选择你的招新批次!!!");
   }
   form.value.stuSimpleResumeDTO.batchId = parseInt(batchId.value as string); //将上个页面选择的id，送到当前页面作为不可更改批次使用
-  title.value = deCode(params.title as string);
+  title.value = params.title ? deCode(params.title as string) : "";
 
   queryResume(batchId.value as string, storage.token)
     .then((res) => {
@@ -838,7 +989,7 @@ const handleFileUpload = (event: Event) => {
       });
       fileArr.push(file);
     });
-    
+
     // 更新FormData
     fileListData.delete("file");
     fileArr.forEach((item: File) => {
@@ -850,13 +1001,13 @@ const handleFileUpload = (event: Event) => {
 const removeFile = (index: number) => {
   const removedFile = fileList.value[index];
   fileList.value.splice(index, 1);
-  
+
   // 从fileArr中移除对应文件
   const fileIndex = fileArr.findIndex(file => file.name === removedFile.name);
   if (fileIndex > -1) {
     fileArr.splice(fileIndex, 1);
   }
-  
+
   // 更新FormData
   fileListData.delete("file");
   fileArr.forEach((item: File) => {
@@ -870,6 +1021,9 @@ const triggerFileInput = () => {
   fileInput.value?.click();
 };
 
+// AutoForm引用
+const autoFormRef = ref();
+
 // 添加拖拽上传处理方法
 const handleFileDrop = (event: DragEvent) => {
   const files = event.dataTransfer?.files;
@@ -882,7 +1036,7 @@ const handleFileDrop = (event: DragEvent) => {
       });
       fileArr.push(file);
     });
-    
+
     // 更新FormData
     fileListData.delete("file");
     fileArr.forEach((item: File) => {
@@ -898,6 +1052,40 @@ const formatFileSize = (bytes: number): string => {
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+// 处理AutoForm提交
+const handleFormSubmit = (data: ResumeFormData) => {
+  // 同步AutoForm数据到原有的form对象
+  const dto = form.value.stuSimpleResumeDTO;
+  dto.name = data.name;
+  dto.studentId = data.studentId;
+  dto.gender = parseInt(data.gender);
+  dto.grade = data.grade;
+  dto.major = data.major;
+  dto.className = data.className;
+  dto.email = data.email;
+  dto.phoneNumber = data.phoneNumber;
+  dto.reason = data.reason;
+  dto.introduce = data.introduce;
+  dto.experience = data.experience;
+  dto.awards = data.awards;
+  dto.remark = data.remark || '';
+  
+  // 调用原有的提交逻辑
+  submit();
+};
+
+// 新的提交函数，触发AutoForm验证
+const submitWithValidation = () => {
+  // 触发AutoForm的提交，这会自动进行验证
+  if (autoFormRef.value) {
+    // 查找AutoForm内部的form元素并触发提交
+    const formElement = autoFormRef.value.$el?.querySelector('form');
+    if (formElement) {
+      formElement.requestSubmit();
+    }
+  }
 };
 
 const watchHeight = () => {
@@ -918,10 +1106,10 @@ onBeforeUnmount(() => {
       {{ title }}
     </h1>
     <Button variant="outline" @click="toProcess" class="Resumeprocess">简历进度</Button>
-    
+
     <form id="form" class="space-y-6 p-6">
       <titleBlock title="个人信息【必填】" class="title"></titleBlock>
-      
+
       <!-- 证件照上传 -->
       <div class="form-item">
         <Label class="text-base font-medium">证件照 *</Label>
@@ -939,227 +1127,65 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <!-- 姓名 -->
-       <div class="form-item">
-         <Label for="name" class="text-base font-medium">姓名 *</Label>
-         <Input 
-            id="name"
-            :model-value="form.stuSimpleResumeDTO.name || ''"
-            @update:model-value="form.stuSimpleResumeDTO.name = $event as string"
-            placeholder="请填写姓名" 
-            class="width"
-          />
-        </div>
-
-        <!-- 学号 -->
-        <div class="form-item">
-          <Label for="studentId" class="text-base font-medium">学号 *</Label>
-          <Input 
-            id="studentId"
-            :model-value="form.stuSimpleResumeDTO.studentId || ''"
-            @update:model-value="form.stuSimpleResumeDTO.studentId = $event as string"
-            placeholder="11~13位学号" 
-            class="width"
-          />
-        </div>
-
-        <!-- 性别 -->
-        <div class="form-item">
-          <Label class="text-base font-medium">性别 *</Label>
-          <RadioGroup 
-            :model-value="form.stuSimpleResumeDTO.gender?.toString() || ''"
-            @update:model-value="form.stuSimpleResumeDTO.gender = parseInt($event as string)"
-            class="flex gap-4"
-          >
-            <div v-for="item in gender" :key="item.value" class="flex items-center space-x-2">
-              <RadioGroupItem :value="item.value" :id="item.value" />
-              <Label :for="item.value">{{ item.label }}</Label>
-            </div>
-          </RadioGroup>
-        </div>
-
-        <!-- 年级 -->
-        <div class="form-item">
-          <Label for="grade" class="text-base font-medium">年级 *</Label>
-          <Input 
-            id="grade"
-            :model-value="form.stuSimpleResumeDTO.grade?.toString() || ''"
-            @update:model-value="form.stuSimpleResumeDTO.grade = parseInt($event as string)"
-            type="number"
-            placeholder="20xx格式填写" 
-            class="width"
-          />
-        </div>
-
-        <!-- 专业 -->
-        <div class="form-item">
-          <Label for="major" class="text-base font-medium">专业 ( 乱填后果自负!! ) *</Label>
-          <Input 
-            id="major"
-            :model-value="form.stuSimpleResumeDTO.major || ''"
-            @update:model-value="form.stuSimpleResumeDTO.major = $event as string"
-            placeholder="请填写专业" 
-            class="width"
-          />
-        </div>
-
-        <!-- 班级 -->
-        <div class="form-item">
-          <Label for="className" class="text-base font-medium">班级 ( 乱填后果自负!! ) *</Label>
-          <Input 
-            id="className"
-            :model-value="form.stuSimpleResumeDTO.className || ''"
-            @update:model-value="form.stuSimpleResumeDTO.className = $event as string"
-            placeholder="请以班级+班号格式填写" 
-            class="width"
-          />
-        </div>
-
-        <!-- 邮箱 -->
-        <div class="form-item">
-          <Label for="email" class="text-base font-medium">邮箱 *</Label>
-          <Input 
-            id="email"
-            :model-value="form.stuSimpleResumeDTO.email || ''"
-            @update:model-value="form.stuSimpleResumeDTO.email = $event as string"
-            type="email"
-            placeholder="请填写常用邮箱" 
-            class="width"
-          />
-        </div>
-
-        <!-- 手机号 -->
-        <div class="form-item">
-          <Label for="phoneNumber" class="text-base font-medium">手机号 *</Label>
-          <Input 
-            id="phoneNumber"
-            :model-value="form.stuSimpleResumeDTO.phoneNumber || ''"
-            @update:model-value="form.stuSimpleResumeDTO.phoneNumber = $event as string"
-            placeholder="请填写常用手机号" 
-            class="width"
-          />
-        </div>
-
-        <!-- 简介 -->
-        <div class="form-item">
-          <Label for="introduce" class="text-base font-medium">简介 *</Label>
-          <Textarea 
-            id="introduce"
-            :model-value="form.stuSimpleResumeDTO.introduce || ''"
-            @update:model-value="form.stuSimpleResumeDTO.introduce = $event as string"
-            placeholder="请填写个人简介" 
-            class="width min-h-[100px]"
-          />
-        </div>
-
-        <!-- 经历 -->
-        <div class="form-item">
-          <Label for="experience" class="text-base font-medium">经历 *</Label>
-          <Textarea 
-            id="experience"
-            :model-value="form.stuSimpleResumeDTO.experience || ''"
-            @update:model-value="form.stuSimpleResumeDTO.experience = $event as string"
-            placeholder="请填写个人经历" 
-            class="width min-h-[100px]"
-          />
-        </div>
-
-        <!-- 获奖经历 -->
-        <div class="form-item">
-          <Label for="awards" class="text-base font-medium">获奖经历 *</Label>
-          <Textarea 
-            id="awards"
-            :model-value="form.stuSimpleResumeDTO.awards || ''"
-            @update:model-value="form.stuSimpleResumeDTO.awards = $event as string"
-            placeholder="请填写获奖经历" 
-            class="width min-h-[100px]"
-          />
-        </div>
-
-        <!-- 加入理由 -->
-        <div class="form-item">
-          <Label for="reason" class="text-base font-medium">加入理由 *</Label>
-          <Textarea 
-            id="reason"
-            :model-value="form.stuSimpleResumeDTO.reason || ''"
-            @update:model-value="form.stuSimpleResumeDTO.reason = $event as string"
-            placeholder="请填写加入理由" 
-            class="width min-h-[100px]"
-          />
-        </div>
-
-        <!-- 备注 -->
-        <div class="form-item">
-          <Label for="remark" class="text-base font-medium">备注</Label>
-          <Input 
-            id="remark"
-            :model-value="form.stuSimpleResumeDTO.remark || ''"
-            @update:model-value="form.stuSimpleResumeDTO.remark = $event as string"
-            placeholder="可选填备注" 
-            class="width"
-          />
-       </div>
+      <!-- AutoForm 表单 -->
+      <AutoForm 
+        ref="autoFormRef"
+        :schema="resumeFormSchema" 
+        :field-config="fieldConfig"
+        class="space-y-4"
+        @submit="handleFormSubmit"
+      />
 
       <div class="space"></div>
       <titleBlock title="附件上传【选填】" class="title"></titleBlock>
-      
+
       <!-- 文件上传区域 -->
       <div class="form-item">
         <Label class="text-base font-medium">附件</Label>
         <Card class="width">
           <CardContent class="p-6">
             <div class="relative">
-              <div 
-                class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 cursor-pointer"
-                @click="triggerFileInput"
-                @dragover.prevent
-                @drop.prevent="handleFileDrop"
-              >
+              <div
+                class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center transition-all duration-200 cursor-pointer"
+                @click="triggerFileInput" @dragover.prevent @drop.prevent="handleFileDrop">
                 <div class="mb-4">
-                  <svg class="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                  <svg class="w-12 h-12 mx-auto text-muted-foreground" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                   </svg>
                 </div>
-                <p class="text-gray-600 mb-2">点击上传文件或拖拽文件到此处</p>
-                <p class="text-sm text-gray-400">支持多文件上传</p>
+                <p class="text-muted-foreground mb-2">点击上传文件或拖拽文件到此处</p>
+                <p class="text-sm text-muted-foreground">支持多文件上传</p>
               </div>
-              <input 
-                ref="fileInput"
-                type="file" 
-                multiple 
-                class="hidden"
-                @change="handleFileUpload"
-              />
+              <input ref="fileInput" type="file" multiple class="hidden" @change="handleFileUpload" />
             </div>
-            
+
             <!-- 文件列表显示 -->
             <div v-if="fileList.length > 0" class="mt-6">
-              <h4 class="text-sm font-medium text-gray-700 mb-3">已上传文件 ({{ fileList.length }})</h4>
+              <h4 class="text-sm font-medium text-muted-foreground mb-3">已上传文件 ({{ fileList.length }})</h4>
               <div class="space-y-2">
-                <div 
-                  v-for="(file, index) in fileList" 
-                  :key="index" 
-                  class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors"
-                >
+                <div v-for="(file, index) in fileList" :key="index"
+                  class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors">
                   <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    <div class="w-8 h-8 bg-muted-foreground rounded-lg flex items-center justify-center">
+                      <svg class="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
                       </svg>
                     </div>
                     <div>
-                      <p class="text-sm font-medium text-gray-900">{{ file.name }}</p>
-                      <p class="text-xs text-gray-500">{{ formatFileSize(file.file?.size || 0) }}</p>
+                      <p class="text-sm font-medium text-muted-foreground">{{ file.name }}</p>
+                      <p class="text-xs text-muted-foreground">{{ formatFileSize(file.file?.size || 0) }}</p>
                     </div>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    @click="removeFile(index)"
-                    class="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
+                  <Button variant="ghost" size="sm" @click="removeFile(index)"
+                    class="text-red-600 hover:text-red-700 hover:bg-red-50">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                      </path>
                     </svg>
                   </Button>
                 </div>
@@ -1171,10 +1197,17 @@ onBeforeUnmount(() => {
 
       <!-- 按钮组 -->
       <div class="flex justify-center gap-4 pt-6">
-        <Button @click="submit" class="px-8">提交简历</Button>
+        <Button 
+          @click="submitWithValidation" 
+          :disabled="!isFormValid" 
+          class="px-8"
+          :class="{ 'opacity-50 cursor-not-allowed': !isFormValid }"
+        >
+          提交简历
+        </Button>
         <Button variant="outline" @click="toActivities" class="px-8">跳转活动</Button>
       </div>
-      
+
       <p class="last-p text-center">
         目前还剩下<span class="important-span">{{ count }}</span>次可提交简历
       </p>
@@ -1196,284 +1229,3 @@ onBeforeUnmount(() => {
     </Dialog>
   </div>
 </template>
-
-<style scoped>
-.resume-layout {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  padding: 2rem 1rem;
-}
-
-@media (min-width: 768px) {
-  .resume-layout {
-    padding: 3rem 2rem;
-  }
-}
-
-.top {
-  z-index: 999;
-  position: sticky;
-  top: 0;
-}
-
-.header-description {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 1rem;
-  text-align: center;
-}
-
-@media (min-width: 768px) {
-  .header-description {
-    font-size: 2.5rem;
-    text-align: left;
-    margin-left: 2rem;
-  }
-}
-
-.content {
-  position: relative;
-  width: 200px;
-  height: 200px;
-  background-color: #f9fafb;
-  border: 2px dashed #d1d5db;
-  border-radius: 12px;
-  margin: 0 auto;
-  transition: all 0.3s ease;
-}
-
-.content:hover {
-  border-color: #3b82f6;
-  background-color: #eff6ff;
-}
-
-@media (min-width: 768px) {
-  .content {
-    width: 250px;
-    height: 250px;
-  }
-}
-
-.content input {
-  position: absolute;
-  opacity: 0;
-  width: 100%;
-  height: 100%;
-  cursor: pointer;
-}
-
-.view {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-#icon {
-  display: inline-block;
-  font-size: 2.5rem;
-  color: #6b7280;
-}
-
-#imgContainer {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  cursor: pointer;
-  display: none;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-#imgContainer img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-#img-mask {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  background: rgba(0, 0, 0, 0.5);
-  transition: all 0.3s ease;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-#delImg {
-  display: block;
-  color: white;
-  font-size: 2rem;
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 50%;
-  background: rgba(239, 68, 68, 0.8);
-  width: 3rem;
-  height: 3rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-#imgContainer:hover #img-mask {
-  opacity: 1;
-}
-
-.form-item {
-  margin-bottom: 1.5rem;
-}
-
-.width {
-  width: 100%;
-  background-color: transparent;
-}
-
-.space {
-  height: 1rem;
-  margin: 1rem 0;
-}
-
-.last-p {
-  text-align: center;
-  padding: 2rem 0;
-  color: #6b7280;
-  font-size: 0.875rem;
-}
-
-.important-span {
-  font-weight: 700;
-  color: #ef4444;
-}
-
-.title {
-  margin: 2rem 0 1.5rem 0;
-}
-
-.Resumeprocess {
-  margin: 1rem 0 0 0;
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-}
-
-@media (min-width: 768px) {
-  .Resumeprocess {
-    top: 2rem;
-    right: 2rem;
-  }
-}
-
-/* 表单容器样式 */
-#form {
-  max-width: 800px;
-  margin: 0 auto;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  padding: 2rem;
-}
-
-@media (min-width: 768px) {
-  #form {
-    padding: 3rem;
-  }
-}
-
-/*测试 */
-#loader {
-  /* Uncomment this to make it run! */
-  /*
-     animation: loader 5s linear infinite; 
-  */
-  position: absolute;
-  top: calc(50% - 20px);
-  left: calc(50% - 20px);
-}
-
-@keyframes loader {
-  0% {
-    left: -100px;
-  }
-
-  100% {
-    left: 110%;
-  }
-}
-
-#box {
-  width: 50px;
-  height: 50px;
-  background: #5aa1ff;
-  animation: animate 0.5s linear infinite;
-  position: absolute;
-  top: 0;
-  left: 0;
-  border-radius: 3px;
-}
-
-@keyframes animate {
-  17% {
-    border-bottom-right-radius: 3px;
-  }
-
-  25% {
-    transform: translateY(9px) rotate(22.5deg);
-  }
-
-  50% {
-    transform: translateY(18px) scale(1, 0.9) rotate(45deg);
-    border-bottom-right-radius: 40px;
-  }
-
-  75% {
-    transform: translateY(9px) rotate(67.5deg);
-  }
-
-  100% {
-    transform: translateY(0) rotate(90deg);
-  }
-}
-
-#shadow {
-  width: 50px;
-  height: 5px;
-  background: #000;
-  opacity: 0.1;
-  position: absolute;
-  top: 59px;
-  left: 0;
-  border-radius: 50%;
-  animation: shadow 0.5s linear infinite;
-}
-
-@keyframes shadow {
-  50% {
-    transform: scale(1.2, 1);
-  }
-}
-
-body {
-  background: #6997db;
-  overflow: hidden;
-}
-
-h4 {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  margin: 0;
-  font-weight: 200;
-  opacity: 0.5;
-  font-family: sans-serif;
-  color: #fff;
-}
-</style>

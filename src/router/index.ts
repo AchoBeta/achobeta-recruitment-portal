@@ -57,13 +57,13 @@ const router = createRouter({
           component: () => import("@/views/activitiesApplication.vue"),
           meta: { title: "活动报名", requiresAuth: true },
         },
-        {
-          path: "process",
-          name: "process",
-          component: () => import("@/views/process.vue"),
-          meta: { title: "流程介绍", requiresAuth: true },
-        },
+
       ],
+    }, {
+      path: "/process",
+      name: "process",
+      component: () => import("@/views/process.vue"),
+      meta: { title: "流程介绍", requiresAuth: true },
     },
     {
       path: "/interview",
