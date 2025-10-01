@@ -8,7 +8,6 @@ import { getBatch } from "@/api/api";
 import { cardType } from "@/utils/type/cardType";
 import { batchType } from "@/utils/type/batchType";
 import scroollTo from "@/utils/scroollTo";
-import { enCode } from "@/utils/URIProtect";
 import { useIdStore } from "@/store/idStore";
 import { toast } from "vue-sonner";
 import type { CarouselApi } from "@/components/ui/carousel";
@@ -146,12 +145,11 @@ const teamPhoto = [
   },
 ];
 
-const toApplication = (id: string, tit: string) => {
-  console.log(tit); //活动标题
-  IdStore.setBatchId(id); //为页面设置batchId，当在页面路由进行跳转or刷新时，确保可以BatchId不消失
-
-  tit = enCode(tit);
-  router.push({ path: "/resume", query: { title: tit } });
+const toApplication = (id: string, title: string) => {
+  IdStore.setBatchId(id);
+  router.push({
+    path: "/resume"
+  });
 };
 
 onMounted(() => {

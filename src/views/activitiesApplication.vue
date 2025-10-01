@@ -5,7 +5,6 @@ import { onMounted, ref } from "vue";
 import scroollTo from "@/utils/scroollTo";
 import { Activity } from "@/utils/type/activity";
 import titleBlock from "@/components/titleBlock.vue";
-// import { deCode } from '@/utils/URIProtect'
 import { useAuthStore } from "@/store/index";
 import { useIdStore } from "@/store/idStore";
 import { toast } from "vue-sonner";

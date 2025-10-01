@@ -58,10 +58,6 @@ export const resumeFormSchema = z.object({
     .describe('手机号'),
   
   // 详细信息
-  reason: z.string()
-    .min(1, '请输入加入AB的理由')
-    .describe('加入AB的理由'),
-  
   introduce: z.string()
     .min(1, '请输入简历')
     .describe('个人简介'),
@@ -73,6 +69,10 @@ export const resumeFormSchema = z.object({
   awards: z.string()
     .min(1, '请完善获奖经历')
     .describe('获奖经历'),
+  
+  reason: z.string()
+    .min(1, '请输入加入AB的理由')
+    .describe('加入AB的理由'),
   
   remark: z.string()
     .optional()

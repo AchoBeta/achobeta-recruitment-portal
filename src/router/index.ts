@@ -39,26 +39,28 @@ const router = createRouter({
       meta: { requiresAuth: false },
     },
     {
-      path: "/activitiesLayout",
-      name: "activitiesLayout",
-      component: () => import("@/views/activitiesLayout.vue"),
-      redirect: "/activitiesLayout/activity",
-      meta: { requiresAuth: true },
+      path: "/activity",
+      name: "activity",
+      component: () => import("@/layouts/MainLayout.vue"),
+      meta: { title: "活动一览", requiresAuth: true },
       children: [
         {
-          path: "activity",
-          name: "activity",
+          path: "",
           component: () => import("@/views/glanceActivities.vue"),
-          meta: { title: "活动一览", requiresAuth: true },
-        },
+        }
+      ]
+    },
+    {
+      path: "/application",
+      name: "application",
+      component: () => import("@/layouts/MainLayout.vue"),
+      meta: { title: "活动报名", requiresAuth: true },
+      children: [
         {
-          path: "application",
-          name: "application",
+          path: "",
           component: () => import("@/views/activitiesApplication.vue"),
-          meta: { title: "活动报名", requiresAuth: true },
-        },
-
-      ],
+        }
+      ]
     }, {
       path: "/process",
       name: "process",

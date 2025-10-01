@@ -17,19 +17,20 @@ const prop = defineProps({
 
 <style scoped>
 .title-p {
-  height: 4vh;
-  border-left: 1vw solid rgb(89, 68, 193);
-  line-height: 4vh;
+  height: 2rem;
+  border-left: 10px solid rgb(89, 68, 193);
+  line-height: 2rem;
   font-size: 1.1rem;
   margin: 0;
   padding: 0 0 0 1vw;
 }
+
 .title-border {
   height: 1rem;
-  width: 1vw;
+  width: 10px;
   background-color: green;
   position: relative;
   left: -2vw;
-  top: -3.5vh;
+  top: -3.5rem;
 }
 </style>

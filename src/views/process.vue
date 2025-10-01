@@ -122,12 +122,6 @@ onMounted(async () => {
   }
 });
 
-const swtichStatus = (id: number) => {
-  // return eventColor[id]
-  return {
-    [eventColor[id]]: true,
-  };
-};
 
 // 计算步骤数据，将API数据转换为Stepper组件需要的格式
 const stepperData = computed(() => {
@@ -156,35 +150,26 @@ const stepperData = computed(() => {
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         <p class="text-gray-600 text-lg">正在加载流程信息...</p>
       </div>
-      
+
       <!-- 错误状态 -->
       <div v-else-if="error" class="flex flex-col items-center justify-center py-16 space-y-4">
         <div class="text-6xl">⚠️</div>
         <p class="text-red-600 text-lg font-medium">{{ error }}</p>
-        <button 
-          @click="retryLoad" 
-          class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
+        <button @click="retryLoad"
+          class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
           重试
         </button>
       </div>
-      
+
       <!-- 正常内容 -->
       <div v-else-if="stepperData.length > 0">
         <Stepper orientation="vertical" class="w-full">
-          <StepperItem 
-            v-for="(stepData, index) in stepperData" 
-            :key="stepData.step" 
-            :step="stepData.step"
-            class="mb-4"
-          >
+          <StepperItem v-for="(stepData, index) in stepperData" :key="stepData.step" :step="stepData.step" class="mb-4">
             <StepperTrigger class="flex items-start gap-4 py-2 cursor-default">
-              <StepperIndicator 
-                :class="[
-                  'flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full font-semibold text-sm',
-                  getIndicatorClasses(stepData.colorClass)
-                ]"
-              >
+              <StepperIndicator :class="[
+                'flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full font-semibold text-sm',
+                getIndicatorClasses(stepData.colorClass)
+              ]">
                 {{ stepData.indicator }}
               </StepperIndicator>
               <div class="flex-1 min-w-0">
@@ -203,7 +188,7 @@ const stepperData = computed(() => {
           </StepperItem>
         </Stepper>
       </div>
-      
+
       <!-- 空状态 -->
       <div v-else class="flex flex-col items-center justify-center py-16 space-y-4">
         <div class="text-6xl">📋</div>

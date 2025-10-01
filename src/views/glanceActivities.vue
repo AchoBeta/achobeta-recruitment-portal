@@ -75,35 +75,8 @@ onMounted(() => {
 
 <template>
   <n-flex vertical class="flex-layout">
-    <activitiesCard
-      v-if="!is"
-      v-for="item in activityCard"
-      @toAnother="toResume(item.id.toString())"
-      :cardMain="item.cardDescription"
-      class="glance-card"
-    ></activitiesCard>
-    <errPage
-      v-if="is"
-      class="err"
-      status="warning"
-      title="活动"
-      description="暂时没有活动"
-    ></errPage>
+    <activitiesCard v-if="!is" v-for="item in activityCard" @toAnother="toResume(item.id.toString())"
+      :cardMain="item.cardDescription" class="glance-card"></activitiesCard>
+    <errPage v-if="is" class="err" status="warning" title="活动" description="暂时没有活动"></errPage>
   </n-flex>
 </template>
-
-<style scoped>
-.flex-layout {
-  min-height: 90vh;
-  width: 100vw;
-  background-color: rgba(252, 252, 252, 0.288);
-  padding: 0 0 4vh 0;
-}
-.glance-card {
-  width: 90vw;
-  margin: 3vh 5vw 0 5vw;
-}
-.err {
-  margin: 20vh 0 0 0;
-}
-</style>

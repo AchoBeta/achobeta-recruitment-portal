@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { PropTypes } from "@/utils/type/propTypes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 defineOptions({
@@ -7,9 +6,18 @@ defineOptions({
 });
 
 const props = defineProps({
-  status: PropTypes.string.def("error"),
-  title: PropTypes.string.def("错误!"),
-  description: PropTypes.string.def("出错!error..er.."),
+  status: {
+    type: String,
+    default: "error",
+  },
+  title: {
+    type: String,
+    default: "错误!",
+  },
+  description: {
+    type: String,
+    default: "出错!error..er..",
+  },
 });
 
 // 根据状态确定图标和颜色
