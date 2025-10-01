@@ -24,30 +24,6 @@ const router = useRouter();
 const storage = useAuthStore();
 const isLogin = computed(() => storage.isLoggedIn);
 
-const toAnother = (path: number) => {
-  switch (path) {
-    case 1:
-      router.push("/");
-      break;
-    case 2:
-      toast.warning("暂未完成，敬请期待~");
-      break;
-    case 3:
-      toast.warning("暂未完成，敬请期待~");
-      break;
-    // 登录/退出登录
-    case 4:
-      if (isLogin.value) {
-        storage.clearToken();
-        toast.success("已退出登录");
-        router.push("/login");
-      } else {
-        router.push("/login");
-      }
-      break;
-  }
-};
-
 // 导航数据
 const navigationData = {
   navMain: [
@@ -61,12 +37,12 @@ const navigationData = {
         },
         {
           title: "招新批次",
-          action: () => router.push("/index#recruitment-batches"),
+          action: () => router.push({ path: "/index", hash: "#recruitment-batches" }),
           isActive: false,
         },
         {
           title: "招新流程",
-          action: () => router.push("/index#recruitment-process"),
+          action: () => router.push({ path: "/index", hash: "#recruitment-process" }),
           isActive: false,
         },
       ],

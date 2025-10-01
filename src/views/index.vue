@@ -8,7 +8,6 @@ import { getBatch } from "@/api/api";
 import { cardType } from "@/utils/type/cardType";
 import { batchType } from "@/utils/type/batchType";
 import scroollTo from "@/utils/scroollTo";
-import { useIdStore } from "@/store/idStore";
 import { toast } from "vue-sonner";
 import type { CarouselApi } from "@/components/ui/carousel";
 import { watchOnce } from "@vueuse/core";
@@ -29,7 +28,6 @@ type BatchCardType = {
 
 const router = useRouter();
 const storage = useAuthStore();
-const IdStore = useIdStore();
 
 // 主轮播图缩略图功能
 const emblaMainApi = ref<CarouselApi>();
@@ -145,10 +143,12 @@ const teamPhoto = [
   },
 ];
 
-const toApplication = (id: string, title: string) => {
-  IdStore.setBatchId(id);
+const toApplication = (id: string) => {
   router.push({
-    path: "/resume"
+    path: "/resume",
+    query: {
+      batchId: id,
+    },
   });
 };
 
@@ -259,8 +259,7 @@ onMounted(() => {
         </div>
 
         <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          <Card v-for="item in batchCard" :key="item.id" class="group cursor-pointer"
-            @click="toApplication(item.id, item.cardDescription.title as string)">
+          <Card v-for="item in batchCard" :key="item.id" class="group cursor-pointer" @click="toApplication(item.id)">
             <CardHeader class="pb-4">
               <CardTitle class="text-xl font-bold text-card-foreground group-hover:text-primary transition-colors">
                 {{ item.cardDescription.title }}

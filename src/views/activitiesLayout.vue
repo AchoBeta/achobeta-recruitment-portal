@@ -1,8 +1,6 @@
 <script lang="ts" setup>
 import { ref, onMounted } from "vue";
-import navigationBottom from "@/components/navigationBottom.vue";
-import navigationTop from "@/components/navigationTop.vue";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import scroollTo from "@/utils/scroollTo";
 import { useRouter } from "vue-router";
 

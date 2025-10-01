@@ -5,10 +5,10 @@
     <div class="mx-auto w-full max-w-md">
       <Card class="shadow-lg">
         <CardContent class="p-8">
-          <!-- 剩余提交次数提示 -->
-          <div v-if="count !== null" class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <p class="text-blue-800 font-medium">
-              剩余提交次数: <span class="text-blue-600 font-bold">{{ count }}</span>
+          <!-- 已提交次数提示 -->
+          <div v-if="count !== null" class="mb-6 p-4 rounded-lg border">
+            <p class="font-medium">
+              已提交次数: <span class="font-bold">{{ count }}</span>
             </p>
           </div>
 
@@ -263,7 +263,6 @@ import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { toast } from 'vue-sonner'
 import { useAuthStore } from '@/store/index'
-import { useIdStore } from '@/store/idStore'
 
 // API imports
 import {
@@ -272,6 +271,7 @@ import {
   uploadFileList,
   uploadPicture,
   deleteResource,
+  resourcePreview,
 } from '@/api/api'
 
 // Component imports
@@ -297,7 +297,6 @@ import { formType } from '@/utils/type/formType'
 
 // Stores
 const storage = useAuthStore()
-const idStore = useIdStore()
 const router = useRouter()
 // Form setup
 const form = useForm({
@@ -326,8 +325,11 @@ const count = ref<number | null>(null)
 const showModal = ref<boolean>(false)
 const isSubmitting = ref<boolean>(false)
 
+// File handling types
+type FileItem = File | { name: string; isUploaded: true; attachment: number }
+
 // File handling
-const fileList = ref<File[]>([])
+const fileList = ref<FileItem[]>([])
 const currentPicture = ref<string | null>(null)
 const pictureFile = ref<File | null>(null)
 const pictureInput = ref<HTMLInputElement>()
@@ -384,7 +386,30 @@ const handleFileUpload = (event: Event) => {
   fileList.value.push(...files)
 }
 
-const removeFile = (index: number) => {
+const removeFile = async (index: number) => {
+  const file = fileList.value[index]
+
+  // 类型守卫：检查是否为已上传的文件
+  const isUploadedFile = (item: FileItem): item is { name: string; isUploaded: true; attachment: number } => {
+    return 'isUploaded' in item && item.isUploaded === true
+  }
+
+  // 如果是已上传的文件，需要从服务器删除
+  if (isUploadedFile(file)) {
+    try {
+      await deleteResource(storage.token, file.attachment)
+      // 同时从 apiForm 中移除
+      apiForm.value.stuAttachmentDTOList = apiForm.value.stuAttachmentDTOList.filter(
+        item => item.attachment !== file.attachment
+      )
+      toast.success('文件删除成功')
+    } catch (error) {
+      console.error('删除文件失败:', error)
+      toast.error('删除文件失败')
+      return // 如果删除失败，不从列表中移除
+    }
+  }
+
   fileList.value.splice(index, 1)
 }
 
@@ -439,19 +464,22 @@ const onSubmit = form.handleSubmit(async (data: ResumeFormData) => {
       }
     }
 
-    // Upload files if any
-    if (fileList.value.length > 0) {
+    // Upload new files if any
+    const newFiles = fileList.value.filter((file): file is File => file instanceof File)
+    if (newFiles.length > 0) {
       const fileListData = new FormData()
-      fileList.value.forEach(file => {
+      newFiles.forEach(file => {
         fileListData.append('file', file)
       })
 
       const fileRes = await uploadFileList(storage.token, fileListData)
       if (fileRes.data.code === 200) {
-        apiForm.value.stuAttachmentDTOList = fileRes.data.data.map((attachment: number, index: number) => ({
-          filename: fileList.value[index].name,
+        // 将新上传的文件添加到已有的附件列表中
+        const newAttachments = fileRes.data.data.map((attachment: number, index: number) => ({
+          filename: newFiles[index].name,
           attachment
         }))
+        apiForm.value.stuAttachmentDTOList.push(...newAttachments)
       } else {
         throw new Error(fileRes.data.message)
       }
@@ -482,7 +510,7 @@ const goToActivities = () => {
 // Load existing data
 const loadResumeData = async () => {
   try {
-    const res = await queryResume(storage.token, batchId.value)
+    const res = await queryResume(batchId.value, storage.token)
     if (res.data.code === 200 && res.data.data.stuSimpleResumeVO) {
       const dto = res.data.data.stuSimpleResumeVO
 
@@ -503,18 +531,40 @@ const loadResumeData = async () => {
         remark: dto.remark || '',
       })
 
-      // Load original form structure
+      // Load original form structure - 使用正确的字段名
       Object.assign(apiForm.value.stuSimpleResumeDTO, dto, {
-        stateCount: dto.state
+        stateCount: dto.submitCount || 999  // 使用 submitCount 而不是 state
       })
-      apiForm.value.stuAttachmentDTOList = res.data.data.stuAttachmentVOList || []
 
-      count.value = dto.state
+      // 处理附件列表 - 将 stuAttachmentVOList 转换为可显示的文件列表
+      const attachmentList = res.data.data.stuAttachmentVOList || []
+      apiForm.value.stuAttachmentDTOList = attachmentList
 
-      // Load picture if exists
+      // 创建虚拟文件对象用于显示（不是真实的File对象，只用于显示文件名）
+      fileList.value = attachmentList.map((item: { filename: string; attachment: number }) => ({
+        name: item.filename,
+        // 添加标识表明这是已上传的文件
+        isUploaded: true,
+        attachment: item.attachment
+      } as any))
+
+      // 设置剩余提交次数
+      count.value = dto.submitCount || null
+
+      // 处理图片显示
       if (dto.image) {
-        // You might want to load the actual image URL here
-        // currentPicture.value = await getImageUrl(dto.image)
+        try {
+          // 使用 resourcePreview 接口获取图片数据
+          const imageRes = await resourcePreview(storage.token, dto.image)
+          if (imageRes.data) {
+            // 将 ArrayBuffer 转换为 Blob，然后创建 URL
+            const blob = new Blob([imageRes.data], { type: 'image/jpeg' })
+            currentPicture.value = URL.createObjectURL(blob)
+          }
+        } catch (error) {
+          console.error('加载图片失败:', error)
+          toast.error('加载图片失败')
+        }
       }
     }
   } catch (error) {
@@ -525,11 +575,9 @@ const loadResumeData = async () => {
 
 // Initialize
 onMounted(async () => {
-  // Get batchId from store
-  const storedBatchId = idStore.getBatchId()
-
-  if (storedBatchId) {
-    batchId.value = storedBatchId
+  const id = router.currentRoute.value.query.batchId as string | undefined
+  if (id) {
+    batchId.value = id
     title.value = '简历填写'
     await loadResumeData()
   }
