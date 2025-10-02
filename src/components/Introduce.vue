@@ -1,15 +1,12 @@
 <script setup>
-import {ref} from 'vue'
+import { ref } from "vue";
 defineOptions({
-  name:'Introduce'
-})
+  name: "Introduce",
+});
 </script>
 
 <template>
-   <n-card  
-    content-style="padding:0;"
-    class="introduce-box"
-    >
+  <n-card content-style="padding:0;" class="introduce-box">
     <n-flex vertical class="layout">
       <slot name="title"></slot>
       <slot name="content"></slot>
@@ -18,9 +15,9 @@ defineOptions({
 </template>
 
 <style scoped>
-.introduce-box{
+.introduce-box {
   width: 100vw;
-  height:auto;
+  height: auto;
   background-color: inherit;
   margin-bottom: 20px;
   border-width: none;

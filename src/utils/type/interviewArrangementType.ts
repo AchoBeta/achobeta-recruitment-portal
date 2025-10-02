@@ -1,5 +1,5 @@
-export interface interviewArrangement{
-  time:string,
-  address:string,
-  description:string
+export interface interviewArrangement {
+  time: string;
+  address: string;
+  description: string;
 }

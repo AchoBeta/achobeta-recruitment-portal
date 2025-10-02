@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import { PropTypes } from '@/utils/type/propTypes';
+import { PropTypes } from "@/utils/type/propTypes";
 defineOptions({
-  name:'titleBlock'
-})
-const prop=defineProps({
-  title:PropTypes.string.def('标题')
-})
+  name: "titleBlock",
+});
+const prop = defineProps({
+  title: PropTypes.string.def("标题"),
+});
 </script>
 
 <template>
@@ -16,20 +16,21 @@ const prop=defineProps({
 </template>
 
 <style scoped>
-.title-p{
-  height: 4vh;
-  border-left: 1vw solid rgb(89, 68, 193);
-  line-height: 4vh;
+.title-p {
+  height: 2rem;
+  border-left: 10px solid rgb(89, 68, 193);
+  line-height: 2rem;
   font-size: 1.1rem;
   margin: 0;
   padding: 0 0 0 1vw;
 }
-.title-border{
+
+.title-border {
   height: 1rem;
-  width: 1vw;
+  width: 10px;
   background-color: green;
   position: relative;
   left: -2vw;
-  top: -3.5vh;
+  top: -3.5rem;
 }
 </style>

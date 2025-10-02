@@ -1,29 +1,39 @@
-import {defineStore} from 'pinia'
-import { ref } from 'vue'
+import { defineStore } from "pinia";
+import { ref, computed } from "vue";
 
-export const useStore =defineStore(
-  'store',
-  ()=>{
-    const token = ref<string>('')
+export const useAuthStore = defineStore(
+  "auth",
+  () => {
+    const token = ref<string>("");
 
-    function setToken(newToken:string){
-      token.value=newToken
+    // 计算属性：登录状态
+    const isLoggedIn = computed(() => !!token.value);
+
+    function setToken(newToken: string) {
+      token.value = newToken;
     }
 
-    function clearToken(){
-      token.value=''
-      localStorage.removeItem('store')
+    function clearToken() {
+      token.value = "";
     }
 
-    
+    function logout() {
+      clearToken();
+      // 清理其他相关数据
+      localStorage.removeItem("auth");
+    }
 
-    return{
+    return {
       token,
+      isLoggedIn,
       setToken,
-      clearToken
-    }
+      clearToken,
+      logout,
+    };
   },
   {
-    persist:true
-  }
-)
+    persist: {
+      key: "auth",
+    },
+  },
+);

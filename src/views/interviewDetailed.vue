@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import interviewResult from '@/components/interviewResult.vue'
-import interviewArrangement from '@/components/interviewArrangement.vue'
+import interviewResult from "@/components/interviewResult.vue";
+import interviewArrangement from "@/components/interviewArrangement.vue";
 </script>
 
 <template>
@@ -11,7 +11,7 @@ import interviewArrangement from '@/components/interviewArrangement.vue'
 </template>
 
 <style scoped>
-.interview-layout{
+.interview-layout {
   width: 100vw;
   min-height: 80vh;
 }
