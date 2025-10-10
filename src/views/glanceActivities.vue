@@ -42,13 +42,13 @@ const toResume = (Id: string) => {
 
 onMounted(() => {
   const token: string = storage.token;
-  
+
   // 从路由参数获取batchId
   const routeBatchId = route.params.batchId as string;
-  
+
   if (routeBatchId) {
     batchId.value = routeBatchId;
-    
+
     // 只有在batchId有效时才调用API
     getActivitiesList(batchId.value, token)
       .then((res) => {
