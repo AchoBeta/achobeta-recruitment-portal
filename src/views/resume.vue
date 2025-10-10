@@ -503,7 +503,8 @@ const onSubmit = form.handleSubmit(async (data: ResumeFormData) => {
   }
 })
 
-const goToActivities = () => {
+const goToActivities = (e: Event) => {
+  e.preventDefault()
   router.push(`/activity/${batchId.value}`)
 }
 
