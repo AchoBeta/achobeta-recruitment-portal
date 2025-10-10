@@ -1,31 +1,34 @@
 <script lang="ts" setup>
-// import {  useRoute } from 'vue-router'
 import { onMounted, ref } from "vue";
-// import { Activity } from '@/utils/type/activity'
-import scroollTo from "@/utils/scroollTo";
-import { Activity } from "@/utils/type/activity";
-import titleBlock from "@/components/titleBlock.vue";
 import { useAuthStore } from "@/store/index";
 import { useIdStore } from "@/store/idStore";
 import { toast } from "vue-sonner";
 import { getTemplate } from "@/api/api";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import scroollTo from "@/utils/scroollTo";
+
+// 简化的活动数据结构
+interface ActivityData {
+  id: string | null;
+  paperId: string | null;
+  title: string | null;
+  description: string | null;
+  isRun: boolean | null;
+  deadline: string | null;
+  createTime: string | null;
+}
 
 const storage = useAuthStore();
 const idStore = useIdStore();
 const actId = ref<string>("");
-// const params = useRoute().query
-const activities = ref<Activity>({
+const isLoading = ref<boolean>(true);
+const hasError = ref<boolean>(false);
+const errorMessage = ref<string>("");
+
+// 使用简化的数据结构
+const activity = ref<ActivityData>({
   id: null,
   paperId: null,
-  target: {
-    anyMatch: {
-      grade: null,
-      useId: null,
-    },
-    allMatch: {
-      status: null,
-    },
-  },
   title: null,
   description: null,
   isRun: null,
@@ -33,118 +36,194 @@ const activities = ref<Activity>({
   createTime: null,
 });
 
-onMounted(() => {
+// 格式化日期显示
+const formatDate = (dateString: string | null): string => {
+  if (!dateString) return "未知时间";
+  try {
+    return new Date(dateString).toLocaleString('zh-CN');
+  } catch {
+    return dateString;
+  }
+};
+
+// 获取活动数据
+const fetchActivityData = async (): Promise<void> => {
+  try {
+    isLoading.value = true;
+    hasError.value = false;
+
+    const response = await getTemplate(actId.value, storage.token);
+
+    if (response.data.code === 200) {
+      const activityData = response.data.data.recruitmentActivityVO;
+
+      // 清晰的数据赋值
+      activity.value = {
+        id: activityData.id,
+        paperId: activityData.paperId,
+        title: activityData.title,
+        description: activityData.description,
+        isRun: activityData.isRun,
+        deadline: activityData.deadline,
+        createTime: activityData.createTime,
+      };
+    } else {
+      throw new Error(`获取活动数据失败: ${response.data.message || '未知错误'}`);
+    }
+  } catch (error) {
+    hasError.value = true;
+    errorMessage.value = error instanceof Error ? error.message : '获取活动数据时发生未知错误';
+    toast.error(errorMessage.value);
+    console.error('获取活动数据失败:', error);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+onMounted(async () => {
   scroollTo();
-  if (idStore.getActId() != null) {
-    //如果为空，可能性1：路由跳转的原因，2：直接访问
-    actId.value = idStore.getActId() as string;
-  } else toast.warning("请先选择你的招新活动!!");
-  getTemplate(actId.value, storage.token)
-    .then((res) => {
-      console.log(res);
-      if (res.data.code === 200) {
-        ((activities.value.id = res.data.data.recruitmentActivityVO.id),
-          (activities.value.paperId =
-            res.data.data.recruitmentActivityVO.paperId),
-          // activities.value. = res.data.data.id,            //复杂数据该如何处理？
-          (activities.value.title = res.data.data.recruitmentActivityVO.title),
-          (activities.value.description =
-            res.data.data.recruitmentActivityVO.description),
-          (activities.value.isRun = res.data.data.recruitmentActivityVO.isRun),
-          (activities.value.deadline =
-            res.data.data.recruitmentActivityVO.deadline),
-          (activities.value.createTime =
-            res.data.data.recruitmentActivityVO.createTime));
-      }
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+
+  const storedActId = idStore.getActId();
+  if (storedActId) {
+    actId.value = storedActId;
+    await fetchActivityData();
+  } else {
+    hasError.value = true;
+    errorMessage.value = "请先选择你的招新活动!!";
+    toast.warning(errorMessage.value);
+    isLoading.value = false;
+  }
 });
 </script>
 
 <template>
-  <div class="acApplication-layout">
-    <titleBlock
-      :title="activities.title != null ? activities.title : '活动获取出错'"
-      class="title"
-    ></titleBlock>
-    <div class="activity-card">
-      <div class="activities-content">
-        <p class="activities-title">活动时间:</p>
-        <p class="activities-description time">
-          <span>{{ activities.createTime }} — </span
-          ><span>{{ activities.deadline }}</span>
-        </p>
-      </div>
-      <div class="activities-content">
-        <p class="activities-title">活动详情:</p>
-        <p class="last-activities-description detailed">
-          {{ activities.description }}
-        </p>
-      </div>
+  <div class="container">
+
+    <!-- 加载状态 -->
+    <div v-if="isLoading" class="loading-container">
+      <div class="loading-spinner"></div>
+      <span class="loading-text">正在加载活动信息...</span>
     </div>
+
+    <!-- 错误状态 -->
+    <Card v-else-if="hasError" class="error-card">
+      <CardHeader>
+        <CardTitle class="error-title">获取活动信息失败</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <CardDescription class="error-message">
+          {{ errorMessage }}
+        </CardDescription>
+      </CardContent>
+    </Card>
+
+    <!-- 活动信息 -->
+    <Card v-else class="activity-card">
+      <CardHeader>
+        <CardTitle class="text-xl font-bold text-gray-800">
+          {{ activity.title || '未知活动' }}
+        </CardTitle>
+        <CardDescription v-if="activity.isRun !== null" class="text-sm">
+          <span :class="activity.isRun ? 'text-green-600' : 'text-red-600'">
+            {{ activity.isRun ? '🟢 进行中' : '🔴 已结束' }}
+          </span>
+        </CardDescription>
+      </CardHeader>
+
+      <CardContent class="space-y-6">
+        <!-- 活动时间 -->
+        <div class="space-y-2">
+          <h3 class="text-lg font-semibold text-gray-700">活动时间</h3>
+          <div class="text-gray-600 bg-gray-50 p-3 rounded-lg">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span class="font-medium">开始时间:</span>
+              <span>{{ formatDate(activity.createTime) }}</span>
+            </div>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2 mt-2">
+              <span class="font-medium">截止时间:</span>
+              <span>{{ formatDate(activity.deadline) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 活动详情 -->
+        <div class="space-y-2">
+          <h3 class="text-lg font-semibold text-gray-700">活动详情</h3>
+          <div class="text-gray-600 bg-gray-50 p-4 rounded-lg leading-relaxed">
+            {{ activity.description || '暂无详细描述' }}
+          </div>
+        </div>
+
+        <!-- 活动ID信息 (调试用) -->
+        <div v-if="activity.id" class="text-xs text-gray-400 border-t pt-2">
+          活动ID: {{ activity.id }}
+          <span v-if="activity.paperId" class="ml-4">
+            问卷ID: {{ activity.paperId }}
+          </span>
+        </div>
+      </CardContent>
+    </Card>
   </div>
 </template>
 
 <style scoped>
-.acApplication-layout {
+.container {
   min-height: 75vh;
-  padding: 6vh 0 0 0;
+  padding: 6vh 5vw 0;
   box-sizing: border-box;
 }
-.layout {
-  width: 100vw;
-  font-family: "楷体";
-  background-color: inherit;
+
+.page-title {
+  margin-bottom: 4vh;
+  font-size: 1.25rem;
 }
-.title {
-  margin: 0 0 4vh 4vw;
-  font-size: 1.2rem;
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 16rem;
 }
-.time {
-  font-size: 0.8rem;
+
+.loading-spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 2px solid transparent;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
-.title-border {
-  height: 1rem;
-  width: 1vw;
-  background-color: green;
-  position: relative;
-  left: -2vw;
-  top: -4vh;
+
+.loading-text {
+  margin-left: 1rem;
+  color: #6b7280;
 }
+
+.error-card {
+  width: 90%;
+  max-width: 600px;
+  margin: 0 auto;
+  border-color: #fecaca;
+}
+
+.error-title {
+  color: #dc2626;
+}
+
+.error-message {
+  color: #ef4444;
+}
+
 .activity-card {
-  width: 90vw;
-  min-height: 20vh;
-  background-color: white;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgb(185, 193, 214);
-  margin: 0 auto 0 5vw;
+  width: 90%;
+  max-width: 800px;
+  margin: 0 auto;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
-.activities-content {
-  font-family: "楷体";
-  font-size: 1.1rem;
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
-.activities-title {
-  padding: 2vh 0 0 3vw;
-  font-size: 1.2rem;
-}
-.activities-description {
-  width: 75vw;
-  padding: 1vh 0 0 8vw;
-}
-.last-activities-description {
-  width: 75vw;
-  padding: 1vh 0 2vh 8vw;
-}
-.detailed {
-  line-height: 1.5rem;
-  font-size: 1.2rem;
-}
-/* .activities-content{
-  width:80vw;
-  line-height: 1.4rem;
-  font-size: 1.1rem;
-  margin: 0 0 0 7%;
-} */
 </style>
