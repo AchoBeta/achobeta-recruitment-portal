@@ -65,25 +65,23 @@ const toPage = (index: number) => {
   isCheck.value = index;
   switch (index) {
     case 0:
-      router.push("/activitiesLayout/activity");
+      // 需要batchId参数，这里暂时跳转到首页
+      router.push("/index");
       break;
     case 1:
-      router.push("/activitiesLayout/question");
+      router.push("/questionNaire");
       break;
     case 2:
-      router.push("/activitiesLayout/interview");
+      router.push("/interview");
       break;
   }
 };
 
 onMounted(() => {
   const url = route.fullPath; //根据路由判断图标
-  if (url === "/activitiesLayout/activity") isCheck.value = 0;
-  else if (url === "/activitiesLayout/question") isCheck.value = 1;
-  else if (
-    url === "/activitiesLayout/interview" ||
-    url === "/activitiesLayout/interviewDetailed"
-  )
+  if (url.startsWith("/activity/") || url === "/index") isCheck.value = 0;
+  else if (url === "/questionNaire") isCheck.value = 1;
+  else if (url === "/interview" || url === "/interviewDetailed")
     isCheck.value = 2;
 });
 
