@@ -54,7 +54,7 @@ const router = createRouter({
       meta: { requiresAuth: false },
     },
     {
-      path: "/activity",
+      path: "/activity/:batchId",
       name: "activity",
       component: () => import("@/layouts/MainLayout.vue"),
       meta: { title: "活动一览", requiresAuth: true },

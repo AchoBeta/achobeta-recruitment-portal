@@ -2,7 +2,7 @@
 import activitiesCard from "@/components/activitiesCard.vue";
 import errPage from "@/components/errPage.vue";
 import { ref, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { useAuthStore } from "@/store/index";
 import { useIdStore } from "@/store/idStore";
 import { cardType } from "@/utils/type/cardType";
@@ -19,6 +19,7 @@ const is = ref<boolean>();
 const storage = useAuthStore();
 const idStore = useIdStore();
 const router = useRouter();
+const route = useRoute();
 const batchId = ref<string>("");
 
 // const errCard = ref<>
@@ -36,40 +37,49 @@ const activityCard = ref<activitycard[]>([
 
 const toResume = (Id: string) => {
   idStore.setActId(Id);
-  router.push({ path: "/activitiesLayout/activity" });
+  router.push({ path: "/application" });
 };
 
 onMounted(() => {
   const token: string = storage.token;
-  if (idStore.getBatchId() != null)
-    //检查地址栏是否为空
-    batchId.value = idStore.getBatchId() as string;
-  else toast.warning("请先选择你的批次");
-
-  getActivitiesList(batchId.value, token)
-    .then((res) => {
-      console.log(res); //如果面试年级
-      if (res.data.code == 200 && res.data.data.length != 0) {
-        //如果成功，则注入进招新批次卡片的对象
-        is.value = false; //如果此时有数据，且返回是200
-        activityCard.value.shift(); //删除数组的默认初始值
-        res.data.data.forEach((item: Activity) => {
-          activityCard.value.push({
-            id: item.id as number,
-            cardDescription: {
-              title: item.title,
-              content: item.description,
-              footer: "截止时间:" + item.deadline,
-            },
+  
+  // 从路由参数获取batchId
+  const routeBatchId = route.params.batchId as string;
+  
+  if (routeBatchId) {
+    batchId.value = routeBatchId;
+    
+    // 只有在batchId有效时才调用API
+    getActivitiesList(batchId.value, token)
+      .then((res) => {
+        console.log(res);
+        if (res.data.code == 200 && res.data.data.length != 0) {
+          //如果成功，则注入进招新批次卡片的对象
+          is.value = false; //如果此时有数据，且返回是200
+          activityCard.value.shift(); //删除数组的默认初始值
+          res.data.data.forEach((item: Activity) => {
+            activityCard.value.push({
+              id: item.id as number,
+              cardDescription: {
+                title: item.title,
+                content: item.description,
+                footer: "截止时间:" + item.deadline,
+              },
+            });
           });
-        });
-      } else {
-        is.value = true;
-      }
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+        } else {
+          is.value = true;
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        is.value = true; // API调用失败时也显示错误页面
+      });
+  } else {
+    // 没有batchId时显示警告并设置错误状态
+    toast.warning("请提供有效的批次ID");
+    is.value = true;
+  }
 });
 </script>
 
