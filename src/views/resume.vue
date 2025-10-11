@@ -8,9 +8,12 @@
           <!-- 进度显示 -->
           <div v-if="history.length > 0" class="mb-6 p-4 rounded-lg border">
             <p class="font-medium mb-3">当前进度</p>
-            <Stepper orientation="horizontal" :default-value="currentStep" class="mx-auto gap-6">
+            <Stepper orientation="vertical" :default-value="currentStep"
+              class="mx-auto flex w-full max-w-md flex-col justify-start gap-10">
               <StepperItem v-for="(h, idx) in history" :key="idx" v-slot="{ state }" :step="idx + 1"
                 class="relative flex w-full items-start gap-6">
+                <StepperSeparator v-if="idx !== history.length - 1"
+                  class="absolute left-[18px] top-[38px] block h-[105%] w-0.5 shrink-0 rounded-full bg-muted group-data-[state=completed]:bg-primary" />
 
                 <Button :variant="state === 'completed' || state === 'active' ? 'default' : 'outline'" size="icon"
                   class="z-10 rounded-full shrink-0"
@@ -328,6 +331,7 @@ import { Check, Circle, Dot } from 'lucide-vue-next'
 // Schema and types
 import { resumeFormSchema, type ResumeFormData } from '@/utils/schemas/resumeSchema'
 import { formType } from '@/utils/type/formType'
+import StepperSeparator from '@/components/ui/stepper/StepperSeparator.vue'
 
 // Stores
 const storage = useAuthStore()
