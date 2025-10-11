@@ -1,271 +1,217 @@
 <script lang="ts" setup>
-import type { SelectOption } from "naive-ui";
-import { ref, onMounted, onBeforeUnmount } from "vue";
-import { useIdStore } from "@/store/idStore";
+import { ref, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import { useAuthStore } from "@/store/index";
-import { getTemplate, getQuestion, submitQuestion } from "@/api/api.ts";
+import { useIdStore } from "@/store/idStore";
+import { getTemplate, getQuestion, submitQuestion } from "@/api/api";
 import { toast } from "vue-sonner";
-import { timePeriod } from "@/utils/type/timePeriod.ts";
-import { questionReceive } from "@/utils/type/questionReceive.ts"; //问题、答案、问题id统合对象类型
-import { questionForm } from "@/utils/type/questionFormType.ts"; //提交活动表单类型
-import { splitTime } from "@/utils/splitTime.ts";
-import titleBlock from "@/components/titleBlock.vue";
-import nullPage from "@/components/nullPage.vue";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
+import { useForm } from "vee-validate";
+import { toTypedSchema } from "@vee-validate/zod";
+import { z } from "zod";
+import type { timePeriod } from "@/utils/type/timePeriod";
+import type { questionReceive } from "@/utils/type/questionReceive";
+import Field from "@/components/ui/field/Field.vue";
+import { FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field";
+import FieldLegend from "@/components/ui/field/FieldLegend.vue";
 
-const pageHeight = ref(document.documentElement.scrollHeight);
-const is = ref<boolean>();
-const isDescription = ref<string>("");
-const idStore = useIdStore();
+const router = useRouter();
+const route = useRoute();
 const storage = useAuthStore();
+const idStore = useIdStore();
+
 const actId = ref<string>("");
-const timeList = ref<timePeriod[]>([]);
+const isVisible = ref<boolean>(false);
+const emptyMsg = ref<string>("");
 
-const questionNaire = ref<questionReceive[]>([]);
+const questions = ref<questionReceive[]>([]);
+const timeOptions = ref<timePeriod[]>([]);
 
-const questionsubmit = ref<questionForm>({
-  participationId: 1,
-  questionAnswerDTOS: [],
-  periodIds: [],
+const schema = toTypedSchema(
+  z.object({
+    participationId: z.number(),
+    answers: z.record(z.string(), z.string().optional()).default({}),
+    periodIds: z.array(z.number()).default([]),
+  })
+);
+
+const form = useForm({
+  validationSchema: schema,
+  initialValues: {
+    participationId: 0,
+    answers: {},
+    periodIds: [],
+  },
 });
 
-const selectChange = (value: Array<number>, option: SelectOption) => {
-  console.log("多选值更新了!!!");
-  console.log(value);
-  console.log(option);
-};
-
-//value:为传入的问题答案，id为传入的问题id
-const inputChange = (value: string, id: number) => {
-  //判断数组中是否有已添加的问题id及其答案
-  const index = questionsubmit.value.questionAnswerDTOS.findIndex(
-    (item) => item.questionId === id,
-  );
-  if (index === -1)
-    //如果找不到，表明没有，则push新的
-    questionsubmit.value.questionAnswerDTOS.push({
-      questionId: id,
-      answer: value,
-    });
-  else {
-    //否则，说明已有，则覆盖成新的对象
-    questionsubmit.value.questionAnswerDTOS[index] = {
-      questionId: id,
-      answer: value,
-    };
-  }
-};
-
-const submit = () => {
-  submitQuestion(storage.token, questionsubmit.value)
-    .then((res) => {
-      console.log(res);
-      if (res.data.code === 200) {
-        toast.success("提交成功");
-      } else {
-        toast.warning(res.data.message);
-      }
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-};
-
-onMounted(() => {
-  if (idStore.getActId() != null) {
+const loadData = async () => {
+  const routeActId = route.params.actId as string | undefined;
+  if (routeActId) {
+    actId.value = routeActId;
+    idStore.setActId(routeActId);
+  } else if (idStore.getActId()) {
     actId.value = idStore.getActId() as string;
   } else {
     toast.warning("请先选择活动!!");
+    isVisible.value = false;
+    emptyMsg.value = "暂无活动问卷";
+    return;
   }
-  //先调用获取草稿函数
-  getQuestion(actId.value, storage.token)
-    .then(async (res) => {
-      console.log("草稿的响应");
-      console.log(res);
-      questionsubmit.value.participationId = res.data.data.id; //得到活动id，并赋值给表单对象
 
-      if (res.data.data.questionAnswerVOS.length != 0) {
-        //若不为空，则说明有交草稿
-        //将草稿的问题，及其回答赋值给问卷对象，及问卷提交对象
-        res.data.data.questionAnswerVOS.forEach(
-          (item: { id: number; title: string; answer: string }) => {
-            questionNaire.value.push({
-              questionId: item.id,
-              question: item.title,
-              receive: item.answer,
-            });
-            //问卷提交对象的答案数组
-            questionsubmit.value.questionAnswerDTOS.push({
-              questionId: item.id,
-              answer: item.answer,
-            });
-          },
-        );
-        //拿到已选择的时间列表的id，赋值给多选框的value
-        res.data.data.timePeriodVOS.forEach(
-          (item: { id: number; startTime: string; endTime: string }) => {
-            questionsubmit.value.periodIds.push(item.id);
-          },
-        );
-        is.value = true; //控制组件显现与否
-        console.log("true");
-      }
+  try {
+    const draft = await getQuestion(actId.value, storage.token);
+    const pid = draft.data?.data?.id;
+    if (pid) form.setFieldValue("participationId", Number(pid));
 
-      await getTemplate(actId.value, storage.token)
-        .then((res) => {
-          //多个异步函数时要用await，同步住异步函数接口调用，即时有草稿也要调用，保证拿到所有的时间列表
-          console.log(res);
+    const draftQ = draft.data?.data?.questionAnswerVOS || [];
+    const draftPeriods = draft.data?.data?.timePeriodVOS || [];
 
-          console.log("获取问卷模板");
+    if (draftQ.length) {
+      questions.value = draftQ.map((it: any) => ({
+        questionId: it.id,
+        question: it.title,
+        receive: it.answer ?? "",
+      }));
+      const ansObj: Record<string, string> = {};
+      draftQ.forEach((it: any) => {
+        ansObj[String(it.id)] = String(it.answer ?? "");
+      });
+      form.setFieldValue("answers", ansObj);
+    }
 
-          res.data.data.timePeriodVOS.forEach(
-            (item: { id: number; startTime: string; endTime: string }) => {
-              timeList.value.push({
-                value: item.id,
-                label:
-                  splitTime(item.startTime) + " - " + splitTime(item.endTime),
-              });
-            },
-          );
+    form.setFieldValue(
+      "periodIds",
+      draftPeriods.map((it: any) => Number(it.id))
+    );
 
-          //如果前面获取草稿时没有给问卷对象赋值，说明没有提交过草稿，导致问卷的answer为空数组
-          if (
-            questionsubmit.value.questionAnswerDTOS.length === 0 &&
-            (res.data.data.questionVOS.length != 0 ||
-              res.data.data.timePeriodVOS.length != 0)
-          ) {
-            res.data.data.questionVOS.forEach(
-              (item: { id: number; title: string; standard: string }) => {
-                questionNaire.value.push({
-                  questionId: item.id,
-                  question: item.title,
-                  receive: "",
-                });
-              },
-            );
-            if (is.value === undefined) is.value = true;
-          } else {
-            if (is.value === undefined) {
-              is.value = false; //若返回的问卷为空，那么就要切换成空组件
-              isDescription.value = "暂无活动问卷";
-            }
-          }
-        })
-        .catch((err) => {
-          //调用模板函数报错
-          console.log(err);
-        });
+    const tpl = await getTemplate(actId.value, storage.token);
+    const tplQs = tpl.data?.data?.questionVOS || [];
+    const tplPeriods = tpl.data?.data?.timePeriodVOS || [];
 
-      //此处为调用模板函数结束，草稿调用的延续
-      if (questionNaire.value.length === 0) {
-      } //说明模板
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-});
+    if (questions.value.length === 0 && tplQs.length) {
+      questions.value = tplQs.map((it: any) => ({
+        questionId: it.id,
+        question: it.title,
+        receive: "",
+      }));
+    }
 
-const watchHeight = () => {
-  // document.body.style.height = `${pageHeight.value}px`           //使文档恢复初试页面高度
-  // (document.getElementById("app") as HTMLElement).style.height = pageHeight.value + "px";
-  const vh = pageHeight.value * 0.01;
-  document.documentElement.style.setProperty("--vh", `${vh}px`);
+    timeOptions.value = tplPeriods.map((it: any) => ({
+      value: Number(it.id),
+      label: `${it.startTime || ""} - ${it.endTime || ""}`,
+    }));
+
+    isVisible.value = questions.value.length > 0 || timeOptions.value.length > 0;
+    if (!isVisible.value) {
+      emptyMsg.value = "暂无活动问卷";
+    }
+  } catch (e) {
+    console.log(e);
+    toast.error("加载问卷失败");
+    isVisible.value = false;
+    emptyMsg.value = "加载失败";
+  }
 };
 
-onMounted(() => {
-  window.addEventListener("resize", watchHeight);
+const togglePeriod = (id: number, checked: boolean) => {
+  console.log(id, checked)
+  const arr = (form.values.periodIds ?? []).slice()
+  const has = arr.includes(id)
+  if (checked && !has) arr.push(id)
+  if (!checked && has) arr.splice(arr.indexOf(id), 1)
+  form.setFieldValue("periodIds", arr)
+  console.log(form.values.periodIds)
+}
+
+const onSubmit = form.handleSubmit(async (values) => {
+  const payload = {
+    participationId: values.participationId,
+    questionAnswerDTOS: questions.value
+      .filter((q) => q.questionId != null)
+      .map((q) => ({
+        questionId: q.questionId as number,
+        answer: String(values.answers[String(q.questionId as number)] ?? ""),
+      })),
+    periodIds: Array.from(new Set(values.periodIds)).map((n) => Number(n)),
+  };
+
+  try {
+    const res = await submitQuestion(storage.token, payload as any);
+    if (res.data.code === 200) {
+      toast.success("提交成功");
+      router.push(`/activities/${actId.value}/application`);
+    } else {
+      toast.warning(res.data.message || "提交失败");
+    }
+  } catch (err) {
+    console.log(err);
+    toast.error("提交失败");
+  }
 });
 
-onBeforeUnmount(() => {
-  window.removeEventListener("resize", watchHeight);
-});
+onMounted(loadData);
 </script>
 
 <template>
-  <div>
-    <nullPage v-if="!is" :desctiption="isDescription" class="null"></nullPage>
-    <n-form :model="questionNaire" class="form-layout" v-if="is">
-      <titleBlock title="活动问卷" class="title"></titleBlock>
-      <div class="questionItem-layout">
-        <n-form-item :label="item.question" class="label-width" v-for="item in questionNaire" :key="item.questionId">
-          <n-input v-model:value="item.receive" type="textarea" class="width" @change="
-            inputChange(item.receive as string, item.questionId as number)
-            " />
-        </n-form-item>
-        <n-space vertical>
-          <n-form-item label="时间段选择" class="last-label-width">
-            <n-select v-model:value="questionsubmit.periodIds" :options="timeList" max-tag-count="responsive"
-              :multiple="true" @update:value="selectChange" :clearable="true" class="select-width"
-              placeholder="请选择时间段" />
-          </n-form-item>
-        </n-space>
+  <div class="space-y-6 p-4">
+    <div class="flex items-center gap-2">
+      <Button variant="outline" @click="router.back()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+          class="w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+        </svg>
+        返回</Button>
+    </div>
+
+    <Card v-if="!isVisible">
+      <CardContent>
+        {{ emptyMsg || '' }}
+      </CardContent>
+    </Card>
+
+    <form v-else @submit="onSubmit" class="space-y-6">
+      <Card>
+        <CardContent class="space-y-6">
+          <div v-for="(item, idx) in questions" :key="item.questionId ?? -1" class="space-y-2">
+            <FormField v-slot="{ componentField }" :name="`answers.${item.questionId}`">
+              <FormItem>
+                <FormLabel>{{ item.question ?? '' }}</FormLabel>
+                <FormControl>
+                  <Textarea v-bind="componentField" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            </FormField>
+            <Separator v-if="idx < questions.length - 1" />
+          </div>
+
+          <Separator />
+
+          <!-- 对齐 shadcn-vue 文档的 FormField 用法，为 periodIds 提供表单上下文 -->
+          <FormField v-slot="{ value }" name="periodIds">
+            <FieldSet>
+              <FieldLegend>时间段选择</FieldLegend>
+              <FieldGroup>
+                <Field v-for="opt in timeOptions" :key="opt.value" orientation="horizontal">
+                  <Checkbox :id="`period-${opt.value}`" :modelValue="(value ?? []).includes(opt.value)"
+                    @update:modelValue="(c: boolean | 'indeterminate') => togglePeriod(opt.value, c === true)" />
+                  <FieldLabel :for="`period-${opt.value}`">{{ opt.label }}</FieldLabel>
+                </Field>
+              </FieldGroup>
+              <FormMessage />
+            </FieldSet>
+          </FormField>
+        </CardContent>
+      </Card>
+
+      <div class="flex justify-end">
+        <Button type="submit">提交问卷</Button>
       </div>
-      <n-form-item>
-        <n-flex justify="space-around" class="flex-button">
-          <n-button type="success" @click="submit">提交问卷</n-button>
-        </n-flex>
-      </n-form-item>
-    </n-form>
+    </form>
   </div>
 </template>
-
-<style scoped>
-.title {
-  margin: calc(var(--vh, 1vh) * 3) 0 calc(var(--vh, 1vh) * 4) 4vw;
-  font-size: 1.5rem;
-}
-
-.header-description {
-  margin: calc(var(--vh, 1vh) * 2) 0 0 2vw;
-}
-
-.null {
-  padding: calc(var(--vh, 1vh) * 10) 0 0 0;
-  box-sizing: border-box;
-  min-height: calc(var(--vh, 1vh) * 80);
-  text-align: center;
-  font-size: 5rem;
-}
-
-.form-layout {
-  margin: calc(var(--vh, 1vh) * 2) 0 0 0;
-  width: 100vw;
-  min-height: calc(var(--vh, 1vh) * 70);
-}
-
-.questionItem-layout {
-  min-height: calc(var(--vh, 1vh) * 55);
-}
-
-.label-width {
-  width: 90vw;
-  margin: 0 auto 0 5vw;
-}
-
-.last-label-width {
-  width: 90vw;
-  margin: 0 5vw 0 5vw;
-}
-
-.width {
-  width: 85vw;
-  min-height: calc(var(--vh, 1vh) * 7);
-  border-radius: 3%;
-  background-color: #ffffff;
-}
-
-.select-width {
-  width: 85vw;
-  border-radius: 3%;
-  background-color: #ffffff;
-}
-
-.last-label-width :deep .n-form-item-feedback-wrapper {
-  min-height: calc(var(--vh, 1vh) * 1);
-}
-
-.flex-button {
-  width: 90vw;
-  margin: 0 6vw 0 auto;
-  padding: 0 0 calc(var(--vh, 1vh) * 2) 0;
-}
-</style>
