@@ -5,17 +5,37 @@ import { useIdStore } from "@/store/idStore";
 import { toast } from "vue-sonner";
 import { getTemplate } from "@/api/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+import { Label } from "@/components/ui/label";
 import scroollTo from "@/utils/scroollTo";
 
 // 简化的活动数据结构
 interface ActivityData {
-  id: string | null;
-  paperId: string | null;
+  id: number | string | null;
+  paperId: number | string | null;
   title: string | null;
   description: string | null;
   isRun: boolean | null;
   deadline: string | null;
   createTime: string | null;
+  target: string | null;
+}
+
+// 新增：问题与时间段数据结构
+interface QuestionVO {
+  id: number | string;
+  title: string | null;
+  standard: string | null;
+  createTime: string | null;
+  updateTime: string | null;
+}
+
+interface TimePeriodVO {
+  id: number | string;
+  startTime: string | null;
+  endTime: string | null;
 }
 
 const storage = useAuthStore();
@@ -34,13 +54,21 @@ const activity = ref<ActivityData>({
   isRun: null,
   deadline: null,
   createTime: null,
+  target: null,
 });
+
+// 新增：完整数据的列表状态
+const questions = ref<QuestionVO[]>([]);
+const timePeriods = ref<TimePeriodVO[]>([]);
 
 // 格式化日期显示
 const formatDate = (dateString: string | null): string => {
   if (!dateString) return "未知时间";
   try {
-    return new Date(dateString).toLocaleString('zh-CN');
+    // 兼容 Safari：不支持 "YYYY-MM-DD HH:mm:ss"，需要 "YYYY-MM-DDTHH:mm:ss"
+    const normalized = dateString.replace(" ", "T");
+    const d = new Date(normalized);
+    return isNaN(d.getTime()) ? dateString : d.toLocaleString('zh-CN');
   } catch {
     return dateString;
   }
@@ -56,6 +84,8 @@ const fetchActivityData = async (): Promise<void> => {
 
     if (response.data.code === 200) {
       const activityData = response.data.data.recruitmentActivityVO;
+      const questionVOS = response.data.data.questionVOS || [];
+      const timePeriodVOS = response.data.data.timePeriodVOS || [];
 
       // 清晰的数据赋值
       activity.value = {
@@ -66,7 +96,23 @@ const fetchActivityData = async (): Promise<void> => {
         isRun: activityData.isRun,
         deadline: activityData.deadline,
         createTime: activityData.createTime,
+        target: activityData.target ?? null,
       };
+
+      // 新增：填充问题与时间段
+      questions.value = questionVOS.map((q: any) => ({
+        id: q.id,
+        title: q.title,
+        standard: q.standard,
+        createTime: q.createTime,
+        updateTime: q.updateTime,
+      }));
+
+      timePeriods.value = timePeriodVOS.map((t: any) => ({
+        id: t.id,
+        startTime: t.startTime,
+        endTime: t.endTime,
+      }));
     } else {
       throw new Error(`获取活动数据失败: ${response.data.message || '未知错误'}`);
     }
@@ -97,70 +143,103 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="container">
+  <div class="container max-w-4xl mx-auto">
 
     <!-- 加载状态 -->
-    <div v-if="isLoading" class="loading-container">
-      <div class="loading-spinner"></div>
-      <span class="loading-text">正在加载活动信息...</span>
-    </div>
+    <Card v-if="isLoading" class="border border-border bg-card rounded-xl">
+      <CardContent class="space-y-4 p-6">
+        <Skeleton class="h-6 w-2/3" />
+        <Skeleton class="h-4 w-full" />
+        <Skeleton class="h-4 w-5/6" />
+      </CardContent>
+    </Card>
 
     <!-- 错误状态 -->
-    <Card v-else-if="hasError" class="error-card">
+    <Card v-else-if="hasError" class="error-card border border-border bg-card rounded-xl">
       <CardHeader>
-        <CardTitle class="error-title">获取活动信息失败</CardTitle>
+        <CardTitle class="error-title text-destructive">获取活动信息失败</CardTitle>
       </CardHeader>
       <CardContent>
-        <CardDescription class="error-message">
+        <CardDescription class="error-message text-destructive">
           {{ errorMessage }}
         </CardDescription>
       </CardContent>
     </Card>
 
     <!-- 活动信息 -->
-    <Card v-else class="activity-card">
-      <CardHeader>
-        <CardTitle class="text-xl font-bold text-gray-800">
+    <Card v-else class="rounded-xl border border-border bg-card">
+      <CardHeader class="space-y-2">
+        <CardTitle class="text-xl font-bold text-card-foreground">
           {{ activity.title || '未知活动' }}
         </CardTitle>
         <CardDescription v-if="activity.isRun !== null" class="text-sm">
-          <span :class="activity.isRun ? 'text-green-600' : 'text-red-600'">
+          <span :class="activity.isRun ? 'text-primary' : 'text-destructive'">
             {{ activity.isRun ? '🟢 进行中' : '🔴 已结束' }}
           </span>
+        </CardDescription>
+        <!-- 新增：面试方向 -->
+        <CardDescription v-if="activity.target" class="text-sm text-muted-foreground">
+          面试方向: {{ activity.target }}
         </CardDescription>
       </CardHeader>
 
       <CardContent class="space-y-6">
-        <!-- 活动时间 -->
+        <!-- 活动时间（简化为区块 + 分割线） -->
         <div class="space-y-2">
-          <h3 class="text-lg font-semibold text-gray-700">活动时间</h3>
-          <div class="text-gray-600 bg-gray-50 p-3 rounded-lg">
-            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-              <span class="font-medium">开始时间:</span>
-              <span>{{ formatDate(activity.createTime) }}</span>
-            </div>
-            <div class="flex flex-col sm:flex-row sm:items-center gap-2 mt-2">
-              <span class="font-medium">截止时间:</span>
-              <span>{{ formatDate(activity.deadline) }}</span>
-            </div>
+          <h3 class="text-lg font-semibold text-foreground">活动时间</h3>
+          <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+            <Label class="font-medium">开始时间</Label>
+            <span>{{ formatDate(activity.createTime) }}</span>
+          </div>
+          <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+            <Label class="font-medium">截止时间</Label>
+            <span>{{ formatDate(activity.deadline) }}</span>
           </div>
         </div>
 
-        <!-- 活动详情 -->
+        <Separator class="my-4" />
+
+        <!-- 活动详情（简化为区块 + 分割线） -->
         <div class="space-y-2">
-          <h3 class="text-lg font-semibold text-gray-700">活动详情</h3>
-          <div class="text-gray-600 bg-gray-50 p-4 rounded-lg leading-relaxed">
+          <h3 class="text-lg font-semibold text-foreground">活动详情</h3>
+          <div class="text-muted-foreground leading-relaxed">
             {{ activity.description || '暂无详细描述' }}
           </div>
         </div>
 
-        <!-- 活动ID信息 (调试用) -->
-        <div v-if="activity.id" class="text-xs text-gray-400 border-t pt-2">
-          活动ID: {{ activity.id }}
-          <span v-if="activity.paperId" class="ml-4">
-            问卷ID: {{ activity.paperId }}
-          </span>
+        <Separator class="my-4" />
+
+        <!-- 问题列表（区块 + Accordion） -->
+        <div class="space-y-2">
+          <h3 class="text-lg font-semibold text-foreground">问题列表</h3>
+          <div class="text-sm text-muted-foreground">共 {{ questions.length }} 个问题</div>
+          <Accordion v-if="questions.length > 0" type="single" collapsible class="space-y-2">
+            <AccordionItem v-for="q in questions" :key="q.id" :value="`q-${q.id}`">
+              <AccordionTrigger class="text-card-foreground">{{ q.title || '未命名问题' }}</AccordionTrigger>
+              <AccordionContent>
+                <div class="text-xs text-muted-foreground">标准: {{ q.standard || '暂无' }}</div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+          <div v-else class="text-muted-foreground">暂无问题</div>
         </div>
+
+        <Separator class="my-4" />
+
+        <!-- 可预约时间段（区块 + Accordion） -->
+        <div class="space-y-2">
+          <h3 class="text-lg font-semibold text-foreground">可预约时间段</h3>
+          <div class="text-sm text-muted-foreground">共 {{ timePeriods.length }} 个时间段</div>
+          <Accordion v-if="timePeriods.length > 0" type="single" collapsible class="space-y-2">
+            <AccordionItem v-for="t in timePeriods" :key="t.id" :value="`t-${t.id}`">
+              <AccordionTrigger class="text-card-foreground">
+                {{ formatDate(t.startTime) }} - {{ formatDate(t.endTime) }}
+              </AccordionTrigger>
+            </AccordionItem>
+          </Accordion>
+          <div v-else class="text-muted-foreground">暂无时间段</div>
+        </div>
+
       </CardContent>
     </Card>
   </div>
@@ -189,36 +268,30 @@ onMounted(async () => {
   width: 3rem;
   height: 3rem;
   border: 2px solid transparent;
-  border-top: 2px solid #3b82f6;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
 .loading-text {
   margin-left: 1rem;
-  color: #6b7280;
 }
 
 .error-card {
   width: 90%;
   max-width: 600px;
   margin: 0 auto;
-  border-color: #fecaca;
 }
 
-.error-title {
-  color: #dc2626;
+.loading-text {
+  margin-left: 1rem;
 }
 
-.error-message {
-  color: #ef4444;
-}
-
-.activity-card {
-  width: 90%;
-  max-width: 800px;
-  margin: 0 auto;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+.loading-spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
