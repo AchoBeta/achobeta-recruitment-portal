@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "@/store/index";
+import { useIdStore } from "@/store/idStore";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -25,24 +26,24 @@ const router = createRouter({
     },
     {
       path: "/index",
-      name: "index",
       component: () => import("@/layouts/MainLayout.vue"),
       meta: { requiresAuth: true },
       children: [
         {
           path: "",
+          name: "index",
           component: () => import("@/views/index.vue"),
         }
       ]
     },
     {
       path: "/person",
-      name: "person",
       component: () => import("@/layouts/MainLayout.vue"),
       meta: { requiresAuth: true },
       children: [
         {
           path: "",
+          name: "person",
           component: () => import("@/views/person.vue"),
         }
       ]
@@ -55,24 +56,47 @@ const router = createRouter({
     },
     {
       path: "/activity/:batchId",
-      name: "activity",
       component: () => import("@/layouts/MainLayout.vue"),
       meta: { title: "活动一览", requiresAuth: true },
       children: [
         {
           path: "",
+          name: "activity",
           component: () => import("@/views/glanceActivities.vue"),
         }
       ]
     },
+    // 新增：带 actId 的报名页路由
     {
-      path: "/application",
-      name: "application",
+      path: "/activities/:actId/application",
       component: () => import("@/layouts/MainLayout.vue"),
       meta: { title: "活动报名", requiresAuth: true },
       children: [
         {
           path: "",
+          name: "activitiesApplication",
+          component: () => import("@/views/activitiesApplication.vue"),
+        }
+      ]
+    },
+    {
+      path: "/application",
+      component: () => import("@/layouts/MainLayout.vue"),
+      meta: { title: "活动报名", requiresAuth: true },
+      // 旧路由兼容：如果存在 actId 则重定向到新路由
+      beforeEnter: (_to, _from, next) => {
+        const idStore = useIdStore();
+        const actId = idStore.getActId();
+        if (actId) {
+          next({ name: "activitiesApplication", params: { actId } });
+        } else {
+          next();
+        }
+      },
+      children: [
+        {
+          path: "",
+          name: "application",
           component: () => import("@/views/activitiesApplication.vue"),
         }
       ]
@@ -84,48 +108,70 @@ const router = createRouter({
     },
     {
       path: "/interview",
-      name: "interview",
       component: () => import("@/layouts/MainLayout.vue"),
       meta: { requiresAuth: true },
       children: [
         {
           path: "",
+          name: "interview",
           component: () => import("@/views/interview.vue"),
         }
       ]
     },
     {
       path: "/interviewDetailed",
-      name: "interviewDetailed",
       component: () => import("@/layouts/MainLayout.vue"),
       meta: { requiresAuth: true },
       children: [
         {
           path: "",
+          name: "interviewDetailed",
           component: () => import("@/views/interviewDetailed.vue"),
         }
       ]
     },
     {
-      path: "/questionNaire",
-      name: "questionNaire",
+      path: "/activities/:actId/questionnaire",
       component: () => import("@/layouts/MainLayout.vue"),
       meta: { requiresAuth: true },
       children: [
         {
           path: "",
+          name: "questionnaire",
+          component: () => import("@/views/questionNaire.vue"),
+        }
+      ]
+    },
+    {
+      path: "/questionNaire",
+      component: () => import("@/layouts/MainLayout.vue"),
+      meta: { requiresAuth: true },
+      // 旧路由兼容：如果存在 actId 则重定向到新路由
+      beforeEnter: (_to, _from, next) => {
+        const idStore = useIdStore();
+        const actId = idStore.getActId();
+        if (actId) {
+          next({ name: "questionnaire", params: { actId } });
+        } else {
+          next();
+        }
+      },
+      children: [
+        {
+          path: "",
+          name: "questionNaire",
           component: () => import("@/views/questionNaire.vue"),
         }
       ]
     },
     {
       path: "/resume",
-      name: "resume",
       component: () => import("@/layouts/MainLayout.vue"),
       meta: { requiresAuth: true },
       children: [
         {
           path: "",
+          name: "resume",
           component: () => import("@/views/resume.vue"),
         }
       ]

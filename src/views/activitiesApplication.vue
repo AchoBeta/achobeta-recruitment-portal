@@ -7,9 +7,11 @@ import { getTemplate } from "@/api/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { Label } from "@/components/ui/label";
 import scroollTo from "@/utils/scroollTo";
+import { useRouter, useRoute } from "vue-router";
+import { Button } from "@/components/ui/button";
+import { CardFooter } from "@/components/ui/card";
 
 // 简化的活动数据结构
 interface ActivityData {
@@ -129,6 +131,14 @@ const fetchActivityData = async (): Promise<void> => {
 onMounted(async () => {
   scroollTo();
 
+  const routeActId = route.params.actId as string | undefined;
+  if (routeActId) {
+    actId.value = routeActId;
+    idStore.setActId(routeActId);
+    await fetchActivityData();
+    return;
+  }
+
   const storedActId = idStore.getActId();
   if (storedActId) {
     actId.value = storedActId;
@@ -140,6 +150,20 @@ onMounted(async () => {
     isLoading.value = false;
   }
 });
+
+const router = useRouter();
+const route = useRoute();
+const goToQuestionnaire = () => {
+  const idVal = activity.value.id;
+  if (idVal !== null && idVal !== undefined) {
+    idStore.setActId(String(idVal));
+    // 使用显式路径跳转，避免命名路由解析失败
+    router.push({ path: `/activities/${String(idVal)}/questionnaire` });
+  } else {
+    // 兼容旧路由：无 actId 时仍可跳转旧路径
+    router.push({ name: "questionNaire" });
+  }
+};
 </script>
 
 <template>
@@ -207,40 +231,12 @@ onMounted(async () => {
           </div>
         </div>
 
-        <Separator class="my-4" />
-
-        <!-- 问题列表（区块 + Accordion） -->
-        <div class="space-y-2">
-          <h3 class="text-lg font-semibold text-foreground">问题列表</h3>
-          <div class="text-sm text-muted-foreground">共 {{ questions.length }} 个问题</div>
-          <Accordion v-if="questions.length > 0" type="single" collapsible class="space-y-2">
-            <AccordionItem v-for="q in questions" :key="q.id" :value="`q-${q.id}`">
-              <AccordionTrigger class="text-card-foreground">{{ q.title || '未命名问题' }}</AccordionTrigger>
-              <AccordionContent>
-                <div class="text-xs text-muted-foreground">标准: {{ q.standard || '暂无' }}</div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-          <div v-else class="text-muted-foreground">暂无问题</div>
-        </div>
-
-        <Separator class="my-4" />
-
-        <!-- 可预约时间段（区块 + Accordion） -->
-        <div class="space-y-2">
-          <h3 class="text-lg font-semibold text-foreground">可预约时间段</h3>
-          <div class="text-sm text-muted-foreground">共 {{ timePeriods.length }} 个时间段</div>
-          <Accordion v-if="timePeriods.length > 0" type="single" collapsible class="space-y-2">
-            <AccordionItem v-for="t in timePeriods" :key="t.id" :value="`t-${t.id}`">
-              <AccordionTrigger class="text-card-foreground">
-                {{ formatDate(t.startTime) }} - {{ formatDate(t.endTime) }}
-              </AccordionTrigger>
-            </AccordionItem>
-          </Accordion>
-          <div v-else class="text-muted-foreground">暂无时间段</div>
-        </div>
-
       </CardContent>
+      <CardFooter class="flex justify-end">
+        <Button class="bg-primary text-primary-foreground hover:bg-primary/90" @click="goToQuestionnaire">
+          填写活动问卷
+        </Button>
+      </CardFooter>
     </Card>
   </div>
 </template>
