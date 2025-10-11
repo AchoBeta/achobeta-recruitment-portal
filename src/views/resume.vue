@@ -5,6 +5,35 @@
     <div class="mx-auto w-full max-w-md">
       <Card class="shadow-lg">
         <CardContent class="p-8">
+          <!-- 进度显示 -->
+          <div v-if="history.length > 0" class="mb-6 p-4 rounded-lg border">
+            <p class="font-medium mb-3">当前进度</p>
+            <Stepper orientation="horizontal" :default-value="currentStep" class="mx-auto gap-6">
+              <StepperItem v-for="(h, idx) in history" :key="idx" v-slot="{ state }" :step="idx + 1"
+                class="relative flex w-full items-start gap-6">
+
+                <Button :variant="state === 'completed' || state === 'active' ? 'default' : 'outline'" size="icon"
+                  class="z-10 rounded-full shrink-0"
+                  :class="[state === 'active' && 'ring-2 ring-ring ring-offset-2 ring-offset-background']">
+                  <Check v-if="state === 'completed'" class="size-5" />
+                  <Circle v-if="state === 'active'" />
+                  <Dot v-if="state === 'inactive'" />
+                </Button>
+
+
+                <div class="flex flex-col gap-1">
+                  <StepperTitle :class="[state === 'active' && 'text-primary']"
+                    class="text-sm font-semibold transition lg:text-base">
+                    {{ statusMap[h.resumeStatus] ?? `状态 ${h.resumeStatus}` }}
+                  </StepperTitle>
+                  <StepperDescription :class="[state === 'active' && 'text-primary']"
+                    class="text-xs text-muted-foreground transition lg:text-sm">
+                    {{ eventMap[h.resumeEvent] ?? `事件 ${h.resumeEvent}` }} · {{ h.createTime }}
+                  </StepperDescription>
+                </div>
+              </StepperItem>
+            </Stepper>
+          </div>
           <!-- 已提交次数提示 -->
           <div v-if="count !== null" class="mb-6 p-4 rounded-lg border">
             <p class="font-medium">
@@ -272,6 +301,9 @@ import {
   uploadPicture,
   deleteResource,
   resourcePreview,
+  getStatusList,
+  getEventList,
+  getResumeStatus,
 } from '@/api/api'
 
 // Component imports
@@ -290,6 +322,8 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
+import { Stepper, StepperItem, StepperTitle, StepperDescription } from '@/components/ui/stepper'
+import { Check, Circle, Dot } from 'lucide-vue-next'
 
 // Schema and types
 import { resumeFormSchema, type ResumeFormData } from '@/utils/schemas/resumeSchema'
@@ -324,6 +358,11 @@ const batchId = ref<string>('')
 const count = ref<number | null>(null)
 const showModal = ref<boolean>(false)
 const isSubmitting = ref<boolean>(false)
+// Progress data
+const history = ref<Array<{ resumeStatus: number; resumeEvent: number; createTime: string }>>([])
+const statusMap = ref<Record<number, string>>({})
+const eventMap = ref<Record<number, string>>({})
+const currentStep = ref<number>(0)
 
 // File handling types
 type FileItem = File | { name: string; isUploaded: true; attachment: number }
@@ -574,6 +613,53 @@ const loadResumeData = async () => {
   }
 }
 
+// Progress loader
+const loadProgressData = async () => {
+  try {
+    // 并行获取状态与事件列表
+    const [statusRes, eventRes] = await Promise.all([
+      getStatusList(storage.token),
+      getEventList(storage.token)
+    ])
+
+    if (statusRes.data.code === 200) {
+      statusMap.value = {}
+      statusRes.data.data.forEach((item: { code: number; message: string }) => {
+        statusMap.value[item.code] = item.message
+      })
+    } else {
+      toast.warning(statusRes.data.message)
+    }
+
+    if (eventRes.data.code === 200) {
+      eventMap.value = {}
+      eventRes.data.data.forEach((item: { event: number; description: string }) => {
+        eventMap.value[item.event] = item.description
+      })
+    } else {
+      toast.warning(eventRes.data.message)
+    }
+
+    // 获取简历进度历史
+    if (batchId.value) {
+      const resumeRes = await getResumeStatus(storage.token, batchId.value)
+      if (resumeRes.data.code === 200) {
+        history.value = resumeRes.data.data.map((item: { resumeStatus: number; resumeEvent: number; createTime: string }) => ({
+          resumeStatus: item.resumeStatus,
+          resumeEvent: item.resumeEvent,
+          createTime: item.createTime,
+        }))
+        currentStep.value = history.value.length
+      } else {
+        toast.warning(resumeRes.data.message)
+      }
+    }
+  } catch (err) {
+    console.error('加载进度数据失败:', err)
+    toast.error('加载进度数据失败，请稍后重试')
+  }
+}
+
 // Initialize
 onMounted(async () => {
   const id = router.currentRoute.value.query.batchId as string | undefined
@@ -581,6 +667,7 @@ onMounted(async () => {
     batchId.value = id
     title.value = '简历填写'
     await loadResumeData()
+    await loadProgressData()
   }
 })
 </script>
